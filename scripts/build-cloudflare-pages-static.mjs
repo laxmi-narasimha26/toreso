@@ -31,6 +31,33 @@ async function copyHtmlFiles(sourceDir, relativeDir = "") {
   );
 }
 
+async function copyRouteBodyFiles(sourceDir, relativeDir = "") {
+  const entries = await readdir(path.join(sourceDir, relativeDir), {
+    withFileTypes: true,
+  });
+
+  await Promise.all(
+    entries.map(async (entry) => {
+      const relativePath = path.join(relativeDir, entry.name);
+      const sourcePath = path.join(sourceDir, relativePath);
+
+      if (entry.isDirectory()) {
+        await copyRouteBodyFiles(sourceDir, relativePath);
+        return;
+      }
+
+      if (!entry.isFile() || !entry.name.endsWith(".body")) {
+        return;
+      }
+
+      const outputRelativePath = relativePath.replace(/\.body$/, "");
+      const destinationPath = path.join(target, outputRelativePath);
+      await mkdir(path.dirname(destinationPath), { recursive: true });
+      await cp(sourcePath, destinationPath, { force: true });
+    }),
+  );
+}
+
 await rm(target, { recursive: true, force: true });
 await mkdir(target, { recursive: true });
 
@@ -41,5 +68,6 @@ await cp(path.join(root, ".next", "static"), path.join(target, "_next", "static"
   force: true,
 });
 await copyHtmlFiles(sourceApp);
+await copyRouteBodyFiles(sourceApp);
 
 console.log(`Cloudflare Pages static bundle written to ${target}`);
