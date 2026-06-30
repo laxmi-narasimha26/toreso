@@ -56,10 +56,21 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="ink-panel text-[#f3eee6]">
-      <div className="container mx-auto px-6 py-16">
-        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.4fr]">
-          <div>
+    <footer className="bg-[#111111] px-3 pb-3 text-[#f3eee6]">
+      <div className="relative overflow-hidden rounded-[2rem] border border-[#f3eee6]/10 bg-[#171412]">
+        <video
+          className="absolute right-0 top-0 hidden h-full w-[42%] object-cover opacity-28 lg:block"
+          src="/brand-assets/videos/paper-fiber-loop-hd.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(240,194,123,0.2),transparent_26%),linear-gradient(90deg,#171412_0%,rgba(23,20,18,0.96)_52%,rgba(23,20,18,0.72)_100%)]" />
+        <div className="relative mx-auto px-6 py-16 lg:px-10">
+          <div className="grid gap-12 lg:grid-cols-[0.88fr_1.12fr]">
+            <div>
             <ToresoMark inverse />
             <p className="mt-6 max-w-md text-base leading-7 text-[#d8cec1]">
               Toreso is being built as the daily packaging store for total recyclable solutions:
@@ -68,17 +79,17 @@ export default function Footer() {
             </p>
             <div className="mt-8 grid gap-3">
               {proofPoints.map((point) => (
-                <span key={point} className="rounded-full border border-[#f3eee6]/15 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#b96b4d]">
+                <span key={point} className="rounded-full border border-[#f3eee6]/15 bg-[#f3eee6]/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#f0c27b]">
                   {point}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {footerSections.map((section) => (
               <div key={section.title}>
-                <h3 className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#b96b4d]">{section.title}</h3>
+                <h3 className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#f0c27b]">{section.title}</h3>
                 <ul className="space-y-3">
                   {section.links.map((link) => (
                     <li key={link.href}>
@@ -90,12 +101,12 @@ export default function Footer() {
                 </ul>
               </div>
             ))}
+            </div>
           </div>
-        </div>
 
-        <div className="mt-14 grid gap-5 border-t border-[#f3eee6]/12 pt-8 md:grid-cols-[1fr_auto] md:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b96b4d]">Material newsletter</p>
+          <div className="mt-14 grid gap-5 border-t border-[#f3eee6]/12 pt-8 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f0c27b]">Material newsletter</p>
             <form className="mt-3 flex max-w-xl gap-2" onSubmit={(event) => event.preventDefault()}>
               <label className="sr-only" htmlFor="footer-email">
                 Email address
@@ -108,7 +119,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="rounded-full bg-[#b96b4d] px-5 text-xs font-semibold uppercase tracking-[0.16em] text-[#242424]"
+                className="rounded-full bg-[#f0c27b] px-5 text-xs font-semibold uppercase tracking-[0.16em] text-[#242424]"
               >
                 Join
               </button>
@@ -120,11 +131,12 @@ export default function Footer() {
           >
             Shop recyclable products
           </Link>
-        </div>
+          </div>
 
-        <p className="mt-8 text-xs text-[#d8cec1]/65">
+          <p className="mt-8 text-xs text-[#d8cec1]/65">
           Copyright {currentYear} Toreso. Total Recyclable Solutions for daily packaging.
-        </p>
+          </p>
+        </div>
       </div>
     </footer>
   );

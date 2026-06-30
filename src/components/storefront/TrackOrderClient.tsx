@@ -3,47 +3,41 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, MapPinned, PackageCheck, Search, Truck } from "lucide-react";
-
-type TrackOrder = {
-  id: string;
-  status: string;
-  trackingId: string;
-  courier: string;
-  address: { line1: string; city: string; state: string; postalCode: string };
-  events: Array<{ label: string; detail: string; time: string }>;
-};
+import { useCartStore } from "@/store/cartStore";
+import type { StorefrontOrder } from "@/store/cartStore";
 
 export default function TrackOrderClient() {
+  const orders = useCartStore((state) => state.orders);
   const [identifier, setIdentifier] = useState("");
-  const [order, setOrder] = useState<TrackOrder | null>(null);
+  const [order, setOrder] = useState<StorefrontOrder | null>(null);
   const [error, setError] = useState("");
 
-  const track = async () => {
+  const track = () => {
+    const query = identifier.trim().toLowerCase();
     setError("");
     setOrder(null);
 
-    if (!identifier.trim()) {
+    if (!query) {
       setError("Enter an order ID or tracking ID.");
       return;
     }
 
-    const response = await fetch(`/api/storefront/track/${encodeURIComponent(identifier.trim())}`, {
-      cache: "no-store",
-    });
-    const json = await response.json();
+    const match = orders.find(
+      (entry) => entry.id.toLowerCase() === query || entry.trackingId.toLowerCase() === query,
+    );
 
-    if (!response.ok) {
-      setError(json.error ?? "Tracking record not found");
+    if (!match) {
+      setError("Tracking record not found in this browser. Use the order ID created at checkout.");
       return;
     }
 
-    setOrder(json.data);
+    setOrder(match);
   };
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-soft">
-        <label className="text-sm font-bold uppercase tracking-[0.18em] text-stone-500" htmlFor="tracking">
+      <div className="rounded-[2rem] border border-[#111111]/10 bg-[#fffaf2] p-6 shadow-[0_20px_70px_rgba(17,17,17,0.07)]">
+        <label className="text-sm font-semibold uppercase tracking-[0.18em] text-[#7d766e]" htmlFor="tracking">
           Order ID or tracking number
         </label>
         <div className="mt-3 flex gap-2">
@@ -51,40 +45,40 @@ export default function TrackOrderClient() {
             id="tracking"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="Paste order ID after checkout"
-            className="h-12 flex-1 rounded-lg border border-stone-300 bg-white px-4 text-sm font-semibold outline-none focus:border-emerald-500"
+            placeholder="Example: TO-2026-1234567"
+            className="h-12 flex-1 rounded-full border border-[#111111]/12 bg-[#f5f1eb] px-4 text-sm font-semibold outline-none focus:border-[#8f5f4a]"
           />
           <button
             type="button"
             onClick={track}
-            className="inline-flex h-12 items-center justify-center rounded-lg bg-stone-950 px-5 text-sm font-semibold text-white"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-[#111111] px-5 text-sm font-semibold text-[#f5f1eb]"
           >
             <Search className="h-4 w-4" />
           </button>
         </div>
-        {error ? <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p> : null}
+        {error ? <p className="mt-4 rounded-[1rem] bg-[#f5d8d0] p-3 text-sm font-semibold text-[#7b1f13]">{error}</p> : null}
 
         {order ? (
-          <div className="mt-8 rounded-2xl border border-stone-200 bg-[#fbfaf4] p-6">
-            <p className="text-sm font-bold uppercase text-emerald-800">{order.id}</p>
-            <h2 className="mt-2 text-3xl font-display font-bold">{order.status}</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600">Tracking ID: {order.trackingId}</p>
+          <div className="mt-8 rounded-[2rem] border border-[#111111]/10 bg-[#f5f1eb] p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8f5f4a]">{order.id}</p>
+            <h2 className="mt-2 font-display text-4xl font-semibold tracking-[-0.04em]">{order.status}</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5a554f]">Tracking ID: {order.trackingId}</p>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {[
                 { icon: Truck, title: "Courier", text: order.courier },
                 { icon: MapPinned, title: "Destination", text: `${order.address.city}, ${order.address.state} ${order.address.postalCode}` },
                 { icon: PackageCheck, title: "Packaging state", text: "Return sleeve and QR care card included" },
               ].map((item) => (
-                <div key={item.title} className="rounded-lg border border-stone-200 bg-white p-5">
-                  <item.icon className="mb-4 h-5 w-5 text-emerald-700" />
+                <div key={item.title} className="rounded-[1.2rem] border border-[#111111]/10 bg-[#fffaf2] p-5">
+                  <item.icon className="mb-4 h-5 w-5 text-[#8f5f4a]" />
                   <p className="font-bold">{item.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-stone-600">{item.text}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5a554f]">{item.text}</p>
                 </div>
               ))}
             </div>
             <Link
-              href={`/orders/${order.id}`}
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-stone-950 px-5 py-3 text-sm font-semibold text-white"
+              href={`/orders?order=${encodeURIComponent(order.id)}`}
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#111111] px-6 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#f5f1eb]"
             >
               Full order details
               <ArrowRight className="h-4 w-4" />
@@ -93,11 +87,11 @@ export default function TrackOrderClient() {
         ) : null}
       </div>
 
-      <aside className="rounded-2xl border border-stone-200 bg-white p-6 shadow-soft">
-        <h2 className="text-2xl font-display font-bold">How tracking works</h2>
-        <p className="mt-3 text-sm leading-6 text-stone-600">
-          Checkout creates a persisted local order with a Toreso tracking ID. Paste either the order ID
-          or tracking ID here to retrieve its status from the storefront API.
+      <aside className="rounded-[2rem] border border-[#111111]/10 bg-[#111111] p-6 text-[#f5f1eb] shadow-[0_24px_80px_rgba(17,17,17,0.16)]">
+        <h2 className="font-display text-3xl font-semibold tracking-[-0.04em]">How tracking works</h2>
+        <p className="mt-3 text-sm leading-7 text-[#d8cec1]">
+          Checkout creates a local Toreso order with a tracking ID. Paste the order ID or tracking ID
+          here in the same browser to retrieve its status.
         </p>
       </aside>
     </div>

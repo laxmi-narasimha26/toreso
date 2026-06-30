@@ -13,21 +13,23 @@ export const metadata: Metadata = {
 
 export default function OrdersPage() {
   return (
-    <div className="min-h-screen bg-[#fbfaf4] text-stone-950">
+    <div className="min-h-screen bg-[#f5f1eb] text-[#111111]">
       <Navbar />
       <main className="pt-28">
-        <section className="border-b border-stone-200 bg-white py-14">
+        <section className="px-3 pb-8 pt-5">
+          <div className="mx-auto rounded-[2rem] bg-[#111111] px-6 py-14 text-[#f5f1eb] md:px-10">
           <div className="container mx-auto flex flex-col justify-between gap-5 px-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-bold uppercase text-emerald-800">Orders</p>
-              <h1 className="mt-2 text-4xl font-display font-bold sm:text-5xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f0c27b]">Orders</p>
+              <h1 className="mt-3 font-display text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">
                 Order status and history.
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600">
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-[#d8cec1]">
                 A premium order center for active deliveries, delivered shipments,
                 returns, replacements, invoices, and reorder actions.
               </p>
             </div>
+          </div>
           </div>
         </section>
 

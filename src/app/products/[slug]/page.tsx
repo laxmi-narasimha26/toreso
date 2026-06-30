@@ -78,6 +78,24 @@ export default async function ProductPage({ params }: PageProps) {
   const productProblem = cleanCatalogText(product.userProblem);
   const productFormat = cleanCatalogText(product.format);
   const productOrigin = cleanCatalogText(product.origin);
+  const cartItem = {
+    id: product.slug,
+    productSlug: product.slug,
+    name: productName,
+    sku: commerce.sku,
+    price: commerce.price,
+    mrp: commerce.mrp,
+    discount: commerce.discount,
+    currency: "INR",
+    supplierId: "toreso",
+    supplierName: "Toreso",
+    minOrderQuantity: 1,
+    description: productInnovation,
+    deliveryPromise: commerce.deliveryPromise,
+    returnWindow: commerce.returnWindow,
+    aisle: productAisle,
+    badges: commerce.badges.map((badge) => cleanCatalogText(badge)),
+  };
   const lifecycle = [
     {
       label: "Material logic",
@@ -284,11 +302,11 @@ export default async function ProductPage({ params }: PageProps) {
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   <AddToCartButton
-                    productSlug={product.slug}
+                    item={cartItem}
                     className="rounded-full bg-[#111111] px-6 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#f5f1eb] transition hover:bg-[#2c2c2c] disabled:cursor-wait disabled:opacity-70"
                   />
                   <AddToCartButton
-                    productSlug={product.slug}
+                    item={cartItem}
                     label="Buy now"
                     redirectTo="/checkout"
                     className="rounded-full border border-[#111111]/18 bg-[#f5f1eb] px-6 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#111111] transition hover:border-[#111111]"

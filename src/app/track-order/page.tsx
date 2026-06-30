@@ -13,14 +13,14 @@ export const metadata: Metadata = {
 
 export default function TrackOrderPage() {
   return (
-    <div className="min-h-screen bg-[#fbfaf4] text-stone-950">
+    <div className="min-h-screen bg-[#f5f1eb] text-[#111111]">
       <Navbar />
       <main className="pt-28">
-        <section className="bg-stone-950 py-16 text-white">
-          <div className="container mx-auto px-6">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-300">Track package</p>
-            <h1 className="mt-3 max-w-4xl text-5xl font-display font-bold">Real-time order tracking surface.</h1>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-300">
+        <section className="px-3 pb-8 pt-5">
+          <div className="mx-auto rounded-[2rem] bg-[#111111] px-6 py-16 text-[#f5f1eb] md:px-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f0c27b]">Track package</p>
+            <h1 className="mt-3 max-w-4xl font-display text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">Real-time order tracking surface.</h1>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#d8cec1]">
               Track by order ID or courier tracking number. Orders created through checkout are persisted locally.
             </p>
           </div>

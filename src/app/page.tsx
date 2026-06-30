@@ -354,24 +354,36 @@ export default function Home() {
         </section>
 
         <section className="bg-[#111111] px-3 py-3 text-[#f5f1eb]">
-          <div className="rounded-[2rem] bg-[#2d9cff] px-6 py-16 text-center text-[#111111] md:py-24">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em]">Toreso shelf one</p>
-            <h2 className="mx-auto mt-5 max-w-5xl font-sans text-5xl font-medium uppercase leading-[0.96] tracking-[-0.045em] md:text-8xl">
-              Packaging people actually want to use.
-            </h2>
-            <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/products"
-                className="rounded-full bg-[#111111] px-7 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#f5f1eb]"
-              >
-                Shop all products
-              </Link>
-              <Link
-                href="/packaging-categories"
-                className="rounded-full border border-[#111111]/25 bg-white/35 px-7 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]"
-              >
-                See categories
-              </Link>
+          <div className="relative overflow-hidden rounded-[2rem] bg-[#171412] px-6 py-16 text-center md:py-24">
+            <video
+              className="absolute inset-0 h-full w-full object-cover opacity-32"
+              src="/brand-assets/videos/recyclable-packaging-table-hd.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(240,194,123,0.34),transparent_24%),linear-gradient(180deg,rgba(17,17,17,0.5),#171412)]" />
+            <div className="relative z-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#f0c27b]">Toreso shelf one</p>
+              <h2 className="mx-auto mt-5 max-w-5xl font-sans text-5xl font-medium uppercase leading-[0.96] tracking-[-0.045em] md:text-8xl">
+                Packaging people actually want to use.
+              </h2>
+              <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+                <Link
+                  href="/products"
+                  className="rounded-full bg-[#f5f1eb] px-7 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]"
+                >
+                  Shop all products
+                </Link>
+                <Link
+                  href="/sustainability"
+                  className="rounded-full border border-white/20 bg-white/10 px-7 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#f5f1eb] backdrop-blur"
+                >
+                  See sustainability
+                </Link>
+              </div>
             </div>
           </div>
         </section>

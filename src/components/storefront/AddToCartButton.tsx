@@ -2,59 +2,53 @@
 
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { CartItem } from "@/store/cartStore";
+import { useCartStore } from "@/store/cartStore";
 
 type AddToCartButtonProps = {
-  productSlug: string;
+  item: Omit<CartItem, "quantity"> & { quantity?: number };
   label?: string;
   redirectTo?: string;
   className?: string;
 };
 
 export default function AddToCartButton({
-  productSlug,
+  item,
   label = "Add to cart",
   redirectTo,
   className,
 }: AddToCartButtonProps) {
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "loading" | "added" | "error">("idle");
+  const addItem = useCartStore((state) => state.addItem);
+  const [status, setStatus] = useState<"idle" | "added">("idle");
 
   const addToCart = () => {
-    setStatus("loading");
-
-    startTransition(async () => {
-      const response = await fetch("/api/storefront/cart/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productSlug, quantity: 1 }),
-      });
-
-      if (!response.ok) {
-        setStatus("error");
-        return;
-      }
-
-      setStatus("added");
-
-      if (redirectTo) {
-        router.push(redirectTo);
-      } else {
-        router.refresh();
-      }
+    addItem({
+      ...item,
+      quantity: item.quantity ?? item.minOrderQuantity ?? 1,
     });
+    setStatus("added");
+
+    if (redirectTo) {
+      startTransition(() => {
+        router.push(redirectTo);
+      });
+      return;
+    }
+
+    window.setTimeout(() => setStatus("idle"), 1400);
   };
 
   return (
     <button
       type="button"
       onClick={addToCart}
-      disabled={status === "loading"}
       className={
         className ??
-        "inline-flex items-center justify-center gap-2 rounded-lg bg-stone-950 px-5 py-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-70"
+        "inline-flex items-center justify-center gap-2 rounded-lg bg-stone-950 px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#8f5f4a]"
       }
     >
-      {status === "loading" ? "Adding..." : status === "added" ? "Added" : status === "error" ? "Try again" : label}
+      {status === "added" ? "Added to cart" : label}
     </button>
   );
 }
