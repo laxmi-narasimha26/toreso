@@ -107,6 +107,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const hasClerkPublishableKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Store",
@@ -146,7 +147,19 @@ export default function RootLayout({
         className={`${cormorant.variable} ${manrope.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
         suppressHydrationWarning
       >
-        <ClerkProvider>
+        {hasClerkPublishableKey ? (
+          <ClerkProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </ClerkProvider>
+        ) : (
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
@@ -156,7 +169,7 @@ export default function RootLayout({
             {children}
             <Toaster />
           </ThemeProvider>
-        </ClerkProvider>
+        )}
       </body>
     </html>
   );

@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import("@opennextjs/cloudflare").then((m) => m.initOpenNextCloudflareForDev());
+
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
