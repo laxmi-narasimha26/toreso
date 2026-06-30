@@ -1,0 +1,29 @@
+# Toreso
+
+Toreso is an everyday packaging products brand focused on sealing, freshness, reusable storage, shipping protection, travel packing, labels, gift packaging, moisture control, and recyclable daily packaging systems.
+
+## Core Pages
+
+- [Shop all packaging products](https://toreso.com/products)
+- [Packaging categories](https://toreso.com/packaging-categories)
+- [Packaging guides](https://toreso.com/guides)
+- [Packaging answers](https://toreso.com/answers)
+- [Product comparisons](https://toreso.com/compare)
+- [Recycle guide](https://toreso.com/recycle-guide)
+
+## Product Areas
+
+- [Heat sealing and resealing gadgets](https://toreso.com/packaging-categories/heat-sealing-and-resealing-gadgets)
+- [Freshness and moisture control](https://toreso.com/packaging-categories/freshness-and-moisture-control-vci-desiccant-reinvention)
+- [Mini stretch film and wrapping](https://toreso.com/packaging-categories/mini-stretch-film-and-wrapping-reinventions)
+- [Cushioning and shipping protection](https://toreso.com/packaging-categories/cushioning-and-shipping-protection-bubble-void-fill-foam-reinvention)
+- [Reusable silicone solutions](https://toreso.com/packaging-categories/reusable-silicone-solutions)
+- [Fridge and pantry organization](https://toreso.com/packaging-categories/fridge-and-pantry-organization)
+
+## Featured Products
+
+- [Toreso SnapSeal Mini](https://toreso.com/products/toreso-snapseal-mini)
+- [Toreso WrapRoller Mini](https://toreso.com/products/toreso-wraproller-mini)
+- [Toreso FreshOrb](https://toreso.com/products/toreso-freshorb-ethylene-absorber)
+- [HoneyWrap Roll](https://toreso.com/products/honeywrap-roll)
+- [Toreso DryHang Closet Bag](https://toreso.com/products/toreso-dryhang-closet-bag)

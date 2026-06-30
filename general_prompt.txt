@@ -1,0 +1,140 @@
+```text
+SYSTEM / ROOT RULES — TORESO ENTERPRISE BUILD STANDARD (READ BEFORE ANY CHANGE)
+
+You are building “Toreso”: an enterprise-grade B2B packaging procurement marketplace (buyers/suppliers/admin/auditor/finance) with multi-plant, RFQ/quotes, orders, payments, logistics, audits/certifications, analytics. This is NOT a hobby project. Do NOT build a “vibe-coded” app. Every change must feel premium, secure, scalable, and production-ready.
+
+ABSOLUTE NON-NEGOTIABLES
+1) Enterprise quality only:
+   - No placeholders, no TODOs, no “mock for now”, no half-finished flows, no loose ends.
+   - No silent failures, no “catch and continue”, no inconsistent response formats.
+   - No insecure defaults (wildcard CORS, weak auth, leaking errors/PII in logs).
+2) Multi-tenant safety is a hard guarantee:
+   - Never allow cross-organization data access. Default deny.
+   - Every read/write is scoped by org_id (and plant_id/site when applicable) — never query tenant-owned entities by id alone.
+   - Add defense-in-depth: recommend and implement Postgres Row-Level Security (RLS) where feasible.
+3) Consistent architecture boundaries:
+   - Controllers/routes: thin request handling only.
+   - Services: business rules, workflows, state transitions.
+   - Repositories: DB access only (Prisma), always tenant-scoped.
+   - Integrations: adapters behind interfaces (payments/logistics/email/sms/search).
+   - Shared: config, validation, errors, logging, authn/authz, observability.
+4) Premium UX and maximum ease-of-access:
+   - UI must look premium, purposeful, consistent, and easy to navigate (not random components).
+   - Accessibility is required (keyboard nav, aria, contrast, focus states, error messaging).
+   - Reduce cognitive load: clear information hierarchy, consistent spacing/typography, predictable navigation.
+   - Excellent empty states, loading skeletons, inline validation, helpful microcopy.
+   - No clutter, no inconsistent styling, no jarring animations, no “prototype vibe”.
+
+STACK ASSUMPTIONS (MATCH PROJECT DOCS)
+Frontend: Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui + React Hook Form + Zod + TanStack Query.
+Backend: Node.js 20 + Express + TypeScript + Prisma + Postgres 15 + Redis 7 + Elasticsearch/OpenSearch + Bull queue.
+Security/compliance: PCI SAQ A (tokenized payments only), SOC2 readiness, OWASP ASVS, DPDP/GDPR controls.
+If any conflict exists (e.g., NextAuth vs Passport/JWT), YOU MUST unify the auth strategy into a single consistent model and refactor to it safely.
+
+OUTPUT STYLE FOR EVERY TASK YOU DO
+Before coding:
+A) Restate requirements (3–8 bullets).
+B) List impacted modules/files.
+C) Enumerate edge cases + security/tenant risks + failure modes.
+D) Choose the safest enterprise default if ambiguous and document the assumption.
+Then implement end-to-end with:
+1) “Implementation Notes” (bullets: decisions + why)
+2) File-by-file change summary
+3) DB migrations + indexes (if any) + rollback notes
+4) Tests added/updated (unit + integration, at least critical paths)
+5) How to run/verify locally (commands + what to check)
+6) Risk checklist (tenant isolation, security, performance, data integrity)
+
+BACKEND GOLD STANDARD (DO THIS EVERY TIME)
+1) API Contract Consistency:
+   - Versioned API base path must be consistent across envs (choose one canonical scheme and stick to it).
+   - Response envelope ALWAYS: { success, message, data, meta? }.
+   - Use correct HTTP codes (200/201/204/400/401/403/404/409/422/429/5xx).
+   - List endpoints have stable pagination and sorting; validate/coerce query params.
+2) Validation:
+   - Validate body/query/params with Zod at the edge. Reject unknown fields unless explicitly allowed.
+3) AuthN/AuthZ:
+   - Every protected endpoint: authentication + authorization + org scoping.
+   - RBAC is not just roles — enforce org membership and permissions; default deny.
+   - Never trust client claims for org/role; verify from DB/cache.
+4) Multi-tenant isolation:
+   - All repository methods require org context (orgId, optionally plantId).
+   - Prohibit “findUnique(id)” for tenant-owned objects unless compound key includes orgId.
+   - Prefer RLS for defense-in-depth:
+     - Set current tenant context per request (e.g., SET LOCAL) and enforce policies on tables.
+     - If RLS not feasible for a specific table, explicitly justify and add additional guards + tests.
+5) Transactions + workflows:
+   - Use Prisma transactions for multi-step writes (order creation, order lines, inventory, payments).
+   - Procurement workflows must use explicit state machines:
+     - RFQ states, Quote states, Order states, Payment states, Shipment states.
+     - Only allow valid transitions; log every transition.
+6) Payments & webhooks (MUST be idempotent):
+   - Do not store raw card data. Tokenized only.
+   - Verify webhook signatures.
+   - Implement idempotency keys for order finalization and webhook handling (dedupe table).
+   - Prevent double-capture, double-fulfillment, duplicate order creation.
+7) Reliable integrations:
+   - Use Outbox pattern for “publish side effects” reliably:
+     - DB transaction writes business changes + outbox row.
+     - Worker processes outbox: send email/SMS, push webhooks, update search index.
+   - External calls: strict timeouts, retries with backoff, circuit-breaker pattern where relevant.
+8) Caching (no production footguns):
+   - Never use Redis KEYS in prod paths. Use SCAN or versioned keys/tag invalidation.
+   - Prevent cache stampedes (single-flight/locks/jittered TTL).
+9) Observability:
+   - Structured JSON logs with correlation/request IDs. Redact PII and secrets.
+   - OpenTelemetry tracing (HTTP + DB + Redis + external calls).
+   - Metrics for latency, error rate, queue depth, webhook failures, payment failures, indexing lag.
+10) Security & compliance:
+   - Helmet, strict CORS allowlist, rate limiting (especially auth), CSRF where relevant.
+   - Secrets only via env/vault; validate config at boot and fail fast.
+   - Tamper-evident audit logs for critical actions:
+     - Auth events, org/user/role changes, product/pricing changes, RFQ/quote approvals, order state changes, payments/refunds/disputes, audit/certification updates.
+   - Data retention/DSAR: design deletion/export flows (DPDP/GDPR).
+
+FRONTEND GOLD STANDARD (PREMIUM, NOT VIBE-CODED)
+1) Design system discipline:
+   - Use shadcn/ui components consistently; do not mix random UI patterns.
+   - One spacing/typography scale; consistent headings; consistent button styles.
+   - Avoid clutter. Use progressive disclosure for complex data (filters, drawers, tabs).
+2) Accessibility and usability:
+   - Keyboard-first navigation, focus rings, aria labels, semantic HTML, form errors tied to inputs.
+   - Great empty states + helpful guidance; clear success/error messaging.
+3) Data fetching:
+   - Central typed API client + Zod-inferred types.
+   - TanStack Query for server state (proper keys, caching, invalidation).
+   - No scattered fetch calls; no duplicated caching logic.
+4) Performance:
+   - Server Components by default; client components only when needed.
+   - Loading skeletons, streaming where beneficial, pagination/virtualization for long lists.
+5) Security:
+   - Never rely on client-side checks for permissions; server enforces.
+   - Route protection per portal/role; handle unauthorized gracefully.
+
+AVOID TECH BLOAT
+- Do not introduce multiple competing libraries “just in case”.
+- Choose one default provider per capability (email, storage, payments) behind an interface; add alternatives only when a real requirement exists.
+- No new dependencies without justification (security, maintenance, bundle size impact).
+
+COMMON AI FAILURE MODES — YOU MUST PREVENT THESE
+- Missing org scoping on queries → cross-tenant leakage (unacceptable)
+- Webhooks without signature verify + idempotency (unacceptable)
+- Multi-write flows without transaction (unacceptable)
+- Inconsistent API envelopes/status codes (unacceptable)
+- Redis KEYS usage in runtime paths (unacceptable)
+- Auth strategy split-brain (NextAuth vs backend JWT) without a unified contract (unacceptable)
+- UI that looks inconsistent/prototype/“vibe-coded” (unacceptable)
+- No tests for critical paths (unacceptable)
+- Docs/contracts drift from implementation (unacceptable)
+
+QUALITY GATES (MUST PASS BEFORE YOU CALL A CHANGE “DONE”)
+- Typecheck passes (strict TS).
+- Lint/format passes.
+- Unit tests for services/validators added/updated.
+- Integration tests for endpoints added/updated for critical paths and key negative cases.
+- Migrations applied cleanly + indexes added where needed.
+- Observability hooks included (logs/traces) for new endpoints/workflows.
+- Security review checklist completed (authz, tenant scope, validation, audit logs, rate limits, PII redaction).
+
+If any requirement conflicts or is unclear, choose the safest enterprise default, implement it end-to-end, and document the assumption in “Implementation Notes”. Never compromise on tenant isolation, security, correctness, or premium usability.
+```

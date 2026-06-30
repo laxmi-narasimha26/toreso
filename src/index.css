@@ -1,0 +1,502 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 220 100% 57%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 166 100% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 220 100% 97%;
+    --sidebar-foreground: 220 40% 20%;
+    --sidebar-primary: 220 100% 57%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 90% 95%;
+    --sidebar-accent-foreground: 220 40% 20%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 25% 10%;
+    --foreground: 210 40% 95%;
+
+    --card: 220 20% 15%;
+    --card-foreground: 210 40% 90%;
+
+    --popover: 220 20% 13%;
+    --popover-foreground: 210 40% 90%;
+
+    --primary: 224 87% 58%;        /* Toreso Blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 25% 25%;
+    --secondary-foreground: 210 40% 85%;
+
+    --muted: 215 20% 20%;
+    --muted-foreground: 215 15% 55%;
+
+    --accent: 265 89% 78%;         /* Purple accent for buyer interface */
+    --accent-foreground: 220 25% 10%; /* Dark text on accent for contrast */
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 224 87% 65%;        /* Lighter Toreso Blue for focus */
+    
+    /* Sidebar colors aligned with the admin portal */
+    --sidebar-background: 220 23% 12%; /* Slightly different dark shade for sidebar */
+    --sidebar-foreground: 210 35% 88%;
+    --sidebar-primary: 224 87% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 265 89% 78%;
+    --sidebar-accent-foreground: 220 25% 10%;
+    --sidebar-border: 215 20% 20%;
+    --sidebar-ring: 224 87% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  /* Special text effects */
+  .text-gradient {
+    @apply bg-gradient-to-r from-toreso-blue via-toreso-teal to-toreso-green text-transparent bg-clip-text;
+  }
+  
+  /* Immersive UI Components */
+  .immersive-card {
+    @apply relative overflow-hidden border-0 shadow-none bg-black/30 backdrop-blur-md border-white/10 text-white transition-all;
+  }
+  
+  .immersive-section {
+    @apply py-24 px-4 md:px-8 relative overflow-hidden;
+  }
+  
+  .immersive-heading {
+    @apply text-4xl md:text-5xl lg:text-6xl font-display font-medium tracking-tight;
+  }
+
+  .immersive-button {
+    @apply py-3 px-6 bg-transparent border border-white/20 hover:border-white/50 rounded-none text-white font-medium transition-all duration-300;
+  }
+  
+  /* Button styles - more minimal */
+  .btn-primary {
+    @apply bg-toreso-blue text-white px-6 py-3 rounded-none font-medium hover:bg-toreso-darkBlue transition-all duration-300;
+  }
+  
+  .btn-secondary {
+    @apply bg-transparent text-toreso-blue border border-toreso-blue px-6 py-3 rounded-none font-medium hover:bg-toreso-blue/5 transition-all duration-300;
+  }
+  
+  .btn-accent {
+    @apply bg-toreso-teal text-white px-6 py-3 rounded-none font-medium hover:bg-toreso-teal/90 transition-all duration-300;
+  }
+
+  /* Animation classes */
+  .animated-float {
+    @apply animate-float;
+  }
+  
+  .animated-fade-in {
+    @apply animate-fade-in;
+  }
+
+  .animated-scale-in {
+    @apply animate-scale-in;
+  }
+  
+  /* Service box - more minimal */
+  .service-box {
+    @apply p-6 transition-all duration-300 border-b border-white/10 hover:bg-white/5 h-full;
+  }
+  
+  .service-icon {
+    @apply text-toreso-blue mb-4 p-0;
+  }
+  
+  /* Feature box - more minimal */
+  .feature-box {
+    @apply p-6 border-0 h-full transition-all duration-300 hover:bg-white/5;
+  }
+
+  /* Custom scrollbar - more minimal */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-toreso-blue/30 hover:bg-toreso-blue/50;
+  }
+
+  /* Stats - more minimal */
+  .stat-box {
+    @apply p-6 border-b border-white/10;
+  }
+
+  .stat-value {
+    @apply text-4xl font-display font-medium text-toreso-blue mb-2;
+  }
+
+  .stat-label {
+    @apply text-white/70 text-sm;
+  }
+
+  /* Custom section styles */
+  .section {
+    @apply py-24 px-4 md:px-8;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-display font-medium mb-2;
+  }
+
+  .section-subtitle {
+    @apply text-xl text-white/70 mb-12;
+  }
+
+  /* Documentation - more minimal */
+  .doc-card {
+    @apply p-6 border-b border-white/10 transition-all duration-300 hover:bg-white/5;
+  }
+  
+  .doc-title {
+    @apply text-xl font-display font-medium mb-2;
+  }
+  
+  .doc-description {
+    @apply text-white/70 mb-4;
+  }
+
+  /* Table styles - more minimal */
+  .data-table {
+    @apply w-full overflow-hidden;
+  }
+  
+  .data-table-header {
+    @apply bg-transparent text-white border-b border-white/10 font-medium text-left;
+  }
+  
+  .data-table-header th {
+    @apply px-4 py-3 text-sm;
+  }
+  
+  .data-table-row {
+    @apply bg-transparent border-b border-white/10;
+  }
+  
+  .data-table-row td {
+    @apply px-4 py-3 text-sm;
+  }
+  
+  .data-table-row:hover {
+    @apply bg-white/5;
+  }
+
+  /* Background patterns - more subtle */
+  .bg-pattern-dots {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  .bg-pattern-grid {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  
+  /* Full-width immersive video background */
+  .video-background {
+    @apply absolute inset-0 z-[-2] w-full h-full overflow-hidden;
+  }
+
+  .video-background video {
+    @apply h-full w-full object-cover;
+  }
+
+  .video-overlay {
+    @apply absolute inset-0 bg-black/75 backdrop-blur-sm z-10;
+  }
+  
+  /* Navigation */
+  .minimal-nav-link {
+    @apply relative text-white opacity-80 hover:opacity-100 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-px after:bg-white after:transition-all hover:after:w-full;
+  }
+  
+  .minimal-nav-link.active {
+    @apply opacity-100 after:w-full;
+  }
+
+  /* Glassmorphism effects */
+  .glass-panel {
+    @apply backdrop-blur-lg bg-white/5 border border-white/10;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-lg bg-black/30 border border-white/10 text-white;
+  }
+
+  .glass-button {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/30 text-white transition-colors;
+  }
+  
+  /* Illustrative drawing styles */
+  .drawing-lines path {
+    @apply stroke-current stroke-1 fill-none;
+  }
+  
+  .illustrated-icon {
+    @apply absolute w-full h-full top-0 left-0 opacity-10 pointer-events-none text-current;
+  }
+  
+  .illustrated-grid {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+  
+  .hand-drawn {
+    filter: url('#hand-drawn-filter');
+  }
+  
+  .parallax-element {
+    @apply transition-transform duration-200;
+    transform-style: preserve-3d;
+  }
+
+  /* SVG Illustration styles */
+  .svg-illustration {
+    @apply max-w-full h-auto;
+  }
+
+  .svg-illustration path,
+  .svg-illustration line,
+  .svg-illustration rect,
+  .svg-illustration circle {
+    @apply stroke-current;
+  }
+
+  .svg-illustration .fill-shape {
+    @apply fill-current;
+  }
+
+  .svg-illustration .translucent-fill {
+    @apply fill-current opacity-20;
+  }
+
+  .svg-illustration .stroke-thin {
+    @apply stroke-1;
+  }
+
+  .svg-illustration .stroke-medium {
+    @apply stroke-2;
+  }
+
+  .svg-illustration .stroke-thick {
+    @apply stroke-2;
+  }
+
+  /* Instead of using @apply stroke-dasharray-2 which doesn't exist in Tailwind */
+  .svg-illustration .dotted-line {
+    stroke-dasharray: 2;
+  }
+}
+
+/* Modern input field styling */
+input, textarea, select {
+  @apply bg-white/5 border-white/20 text-white focus:border-toreso-blue focus:ring-0 transition-all duration-200 rounded-none;
+}
+
+/* Custom animation delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-800 { animation-delay: 0.8s; }
+.delay-900 { animation-delay: 0.9s; }
+.delay-1000 { animation-delay: 1s; }
+
+/* Box decoration pattern */
+.box-decoration-1 {
+  position: relative;
+  overflow: hidden;
+}
+
+.box-decoration-1::before {
+  content: '';
+  position: absolute;
+  right: -15px;
+  top: -15px;
+  width: 100px;
+  height: 100px;
+  border-radius: 0;
+  background: linear-gradient(45deg, #2C5EF6, #00C9B6);
+  opacity: 0.1;
+  z-index: 0;
+}
+
+/* Immersive video hero */
+.immersive-hero {
+  @apply relative min-h-screen flex items-center justify-center overflow-hidden;
+}
+
+.immersive-hero-content {
+  @apply relative z-10 max-w-4xl mx-auto text-white;
+}
+
+/* Dark overlay for better text readability on videos */
+.video-text-overlay {
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.7));
+}
+
+/* Text styles */
+.heading-xl {
+  @apply text-5xl md:text-6xl lg:text-7xl font-display font-medium tracking-tight leading-tight;
+}
+
+.heading-lg {
+  @apply text-4xl md:text-5xl font-display font-medium tracking-tight leading-tight;
+}
+
+.heading-md {
+  @apply text-3xl md:text-4xl font-display font-medium tracking-tight leading-tight;
+}
+
+.body-lg {
+  @apply text-xl leading-relaxed;
+}
+
+.body-md {
+  @apply text-base leading-relaxed;
+}
+
+/* Horizontal scrolling sections */
+.scroll-container {
+  @apply flex overflow-x-auto gap-4 pb-6 snap-x snap-mandatory custom-scrollbar;
+}
+
+.scroll-item {
+  @apply flex-none snap-start w-80;
+}
+
+/* Warehouse and robot illustrations */
+.warehouse-illustration {
+  @apply w-full h-auto;
+}
+
+.robot-illustration {
+  @apply max-w-full h-auto;
+}
+
+/* New illustration styles */
+.robot-arm {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: all 0.5s ease;
+}
+
+.robot-joint {
+  fill: #aaadb0;
+  stroke: #000000e6;
+  stroke-width: 1;
+}
+
+.robot-body {
+  fill: #aaadb0;
+  stroke: #000000e6;
+  stroke-width: 1.5;
+}
+
+.conveyor-belt {
+  fill: #1A1F2C;
+  stroke: #000000e6;
+  stroke-width: 0.5;
+}
+
+.package-box {
+  fill: #9b87f5;
+  stroke: #000000e6;
+  stroke-width: 1;
+}
+
+.warehouse-grid {
+  stroke: rgba(255,255,255,0.1);
+  stroke-width: 0.5;
+}
+
+.warehouse-shelf {
+  fill: #1A1F2C;
+  stroke: #000000e6;
+}
+
+/* Handwritten path effect */
+.handwritten-path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-dashoffset 1.5s ease;
+}
+
+/* ------------------------------------------------------------------ */
+/* TEMPORARY OVERRIDES                                                */
+/* ------------------------------------------------------------------ */
+/* Hide all video elements across the site while we rebuild the UI */
+video {
+  display: none !important;
+}

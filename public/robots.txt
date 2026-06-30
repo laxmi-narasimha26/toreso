@@ -1,0 +1,50 @@
+User-agent: *
+Allow: /
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /admin
+Disallow: /buyer
+Disallow: /supplier
+Disallow: /auditor
+Disallow: /buyers
+Disallow: /suppliers
+Disallow: /for-buyers
+Disallow: /for-suppliers
+Disallow: /platform
+Disallow: /blueprint
+Disallow: /advanced-home
+Disallow: /post-requirement
+Disallow: /request-demo
+Disallow: /solutions/procurement
+Disallow: /solutions/quality
+Disallow: /solutions/finance
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+Disallow: /search
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://toreso.com/sitemap.xml

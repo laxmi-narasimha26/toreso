@@ -1,0 +1,1737 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Users & Authentication
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  phone                 String?   @unique
+  password_hash         String
+  role                  String    // 'buyer', 'supplier', 'admin', 'auditor', 'finance_manager'
+  status                String    @default("pending") // 'pending', 'active', 'suspended', 'deleted'
+  email_verified_at     DateTime?
+  phone_verified_at     DateTime?
+  last_login_at         DateTime?
+  login_count           Int       @default(0)
+  failed_login_attempts Int       @default(0)
+  password_reset_token  String?
+  password_reset_expires_at DateTime?
+  two_factor_enabled    Boolean   @default(false)
+  two_factor_secret     String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+  deleted_at            DateTime?
+
+  // Relations
+  profile               UserProfile?
+  sessions              UserSession[]
+  team_memberships      TeamMember[]
+  notifications         Notification[]
+  sent_messages         Message[]
+  support_tickets       SupportTicket[]
+  support_tickets_assigned SupportTicket[] @relation("AssignedSupportTickets")
+  support_tickets_resolved SupportTicket[] @relation("ResolvedSupportTickets")
+  audit_logs            AuditLog[]
+  reviews               ProductReview[]
+  supplier_reviews      SupplierReview[]
+  rfqs_created          Rfq[]
+  quotes_submitted      RfqQuote[]
+  orders_placed         Order[]
+  verified_orgs         Organization[] @relation("VerifiedOrgs")
+  verified_certs        Certification[]
+  verified_audits       Audit[] @relation("Auditor")
+  uploaded_documents    Document[]
+  
+  // Invoice Discounting & Disputes
+  reviewed_discounting  InvoiceDiscountingApplication[]
+  responded_disputes    Dispute[] @relation("RespondedDisputes")
+  resolved_disputes     Dispute[] @relation("ResolvedDisputes")
+  escalated_disputes    Dispute[] @relation("EscalatedDisputes")
+  
+  // System
+  updated_settings      SystemSetting[]
+
+  cart_items            CartItem[]
+  analytics_events      AnalyticsEvent[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model UserSession {
+  id              String    @id @default(uuid())
+  user_id         String
+  token           String    @unique
+  refresh_token   String?
+  ip_address      String?
+  user_agent      String?
+  device_type     String?
+  browser         String?
+  os              String?
+  expires_at      DateTime
+  created_at      DateTime  @default(now())
+  last_activity_at DateTime @default(now())
+
+  user            User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([token])
+  @@map("user_sessions")
+}
+
+model UserProfile {
+  id                      String    @id @default(uuid())
+  user_id                 String    @unique
+  first_name              String?
+  last_name               String?
+  avatar_url              String?
+  timezone                String    @default("Asia/Kolkata")
+  language                String    @default("en")
+  currency                String    @default("INR")
+  notification_preferences Json?
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @default(now()) @updatedAt
+
+  user                    User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// 2. Organizations (Buyers & Suppliers)
+
+model Organization {
+  id                    String    @id @default(uuid())
+  type                  String    // 'buyer', 'supplier'
+  legal_name            String
+  display_name          String
+  slug                  String    @unique
+  description           String?
+  logo_url              String?
+  cover_image_url       String?
+  website_url           String?
+  
+  // Registration Details
+  registration_number   String?
+  gst_number            String?   @unique
+  pan_number            String?
+  year_established      Int?
+  employee_count_range  String?
+  annual_turnover_range String?
+  
+  // Contact Information
+  primary_email         String?
+  primary_phone         String?
+  support_email         String?
+  support_phone         String?
+  
+  // Address
+  address_line1         String?
+  address_line2         String?
+  city                  String?
+  state                 String?
+  country               String    @default("India")
+  postal_code           String?
+  latitude              Decimal?  @db.Decimal(10, 8)
+  longitude             Decimal?  @db.Decimal(11, 8)
+  
+  // Status & Verification
+  status                String    @default("pending") // 'pending', 'verified', 'active', 'suspended', 'rejected'
+  verified_at           DateTime?
+  verified_by_id        String?
+  rejection_reason      String?
+  
+  // Metadata
+  settings              Json?
+  metadata              Json?
+  // search_vector TSVECTOR is handled by database extensions or raw SQL
+
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+  deleted_at            DateTime?
+
+  // Relations
+  verified_by           User?     @relation("VerifiedOrgs", fields: [verified_by_id], references: [id])
+  buyer_profile         BuyerProfile?
+  supplier_profile      SupplierProfile?
+  team_members          TeamMember[]
+  products              Product[]
+  warehouses            Warehouse[]
+  plants                Plant[]
+  
+  // Buying Relations
+  cart_items            CartItem[]
+  orders_placed         Order[]   @relation("BuyerOrders")
+  rfqs_created          Rfq[]
+  audit_logs            AuditLog[]
+  notifications         Notification[]
+  
+  // Selling Relations
+  orders_received       Order[]   @relation("SupplierOrders")
+  quotes_received       RfqQuote[]
+  invoices_issued       Invoice[] @relation("SupplierInvoices")
+  invoices_received     Invoice[] @relation("BuyerInvoices")
+  
+  // Payments
+  payments_made         Payment[] @relation("Payer")
+  payments_received     Payment[] @relation("Payee")
+  
+  // Logistics
+  shipments_as_supplier Shipment[] @relation("SupplierShipments")
+  shipments_as_buyer    Shipment[] @relation("BuyerShipments")
+  
+  // Compliance
+  certifications        Certification[]
+  audits_as_supplier    Audit[]
+  
+  // Communication
+  conversations_p1      Conversation[] @relation("Participant1")
+  conversations_p2      Conversation[] @relation("Participant2")
+  messages_sent         Message[]
+  
+  // Reviews
+  reviews_given         ProductReview[]
+  supplier_reviews_received SupplierReview[] @relation("SupplierReviewsReceived")
+  supplier_reviews_given    SupplierReview[] @relation("SupplierReviewsGiven")
+
+  // Invoice Discounting
+  discounting_apps      InvoiceDiscountingApplication[]
+
+  // Disputes & Support
+  disputes_raised       Dispute[] @relation("DisputesRaised")
+  disputes_against      Dispute[] @relation("DisputesAgainst")
+  support_tickets       SupportTicket[]
+  
+  // Analytics
+  analytics_events      AnalyticsEvent[]
+
+  @@index([type])
+  @@index([status])
+  @@index([gst_number])
+  @@map("organizations")
+}
+
+model BuyerProfile {
+  id                      String    @id @default(uuid())
+  organization_id         String    @unique
+  industry                String?
+  sub_industry            String?
+  monthly_purchase_volume_range String?
+  preferred_payment_terms String?
+  credit_limit            Decimal?  @db.Decimal(15, 2)
+  credit_used             Decimal   @default(0) @db.Decimal(15, 2)
+  preferred_suppliers     String[]  // Array of UUIDs
+  blocked_suppliers       String[]  // Array of UUIDs
+  
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @default(now()) @updatedAt
+
+  organization            Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@map("buyer_profiles")
+}
+
+model SupplierProfile {
+  id                      String    @id @default(uuid())
+  organization_id         String    @unique
+  
+  // Business Type
+  business_type           String?   // 'manufacturer', 'distributor', 'both'
+  
+  // Manufacturing Capabilities
+  product_categories      String[]
+  manufacturing_capacity_per_month Int?
+  manufacturing_capacity_unit String?
+  min_order_quantity      Int?
+  avg_lead_time_days      Int?
+  
+  // Facilities
+  plant_area_sqft         Int?
+  warehouse_area_sqft     Int?
+  machinery_count         Int?
+  workforce_size          Int?
+  shifts_per_day          Int?
+  
+  // Certifications
+  certifications          String[]  // Array of UUIDs
+  
+  // Financial
+  bank_name               String?
+  bank_account_number     String?
+  bank_ifsc_code          String?
+  bank_account_holder_name String?
+  bank_branch             String?
+  
+  // Performance Metrics
+  overall_rating          Decimal   @default(0.00) @db.Decimal(3, 2)
+  total_orders            Int       @default(0)
+  completed_orders        Int       @default(0)
+  cancelled_orders        Int       @default(0)
+  on_time_delivery_rate   Decimal   @default(0.00) @db.Decimal(5, 2)
+  quality_rating          Decimal   @default(0.00) @db.Decimal(3, 2)
+  response_time_hours     Decimal   @default(0.00) @db.Decimal(6, 2)
+  
+  // Subscription
+  subscription_tier       String    @default("free") // 'free', 'professional', 'enterprise'
+  subscription_starts_at  DateTime?
+  subscription_ends_at    DateTime?
+  
+  // Flags
+  is_featured             Boolean   @default(false)
+  is_verified_seller      Boolean   @default(false)
+  is_top_rated            Boolean   @default(false)
+  
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @default(now()) @updatedAt
+
+  organization            Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([overall_rating(sort: Desc)])
+  @@index([subscription_tier])
+  @@map("supplier_profiles")
+}
+
+model TeamMember {
+  id                  String    @id @default(uuid())
+  organization_id     String
+  user_id             String
+  role                String    // 'admin', 'manager', 'member', 'viewer', 'finance'
+  department          String?
+  job_title           String?
+  permissions         Json?
+  invited_by_id       String?
+  invitation_token    String?
+  invitation_expires_at DateTime?
+  accepted_at         DateTime?
+  status              String    @default("pending") // 'pending', 'active', 'suspended'
+  
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now()) @updatedAt
+
+  organization        Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  user                User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([organization_id, user_id])
+  @@index([organization_id])
+  @@index([user_id])
+  @@map("team_members")
+}
+
+// 3. Products & Catalog
+
+model Category {
+  id                  String    @id @default(uuid())
+  parent_id           String?
+  name                String
+  slug                String    @unique
+  description         String?
+  image_url           String?
+  icon_url            String?
+  sort_order          Int       @default(0)
+  is_active           Boolean   @default(true)
+  metadata            Json?
+  seo_title           String?
+  seo_description     String?
+  seo_keywords        String?
+  
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now()) @updatedAt
+
+  parent              Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children            Category[] @relation("CategoryHierarchy")
+  products            Product[]
+  rfqs                Rfq[]
+
+  @@index([parent_id])
+  @@index([slug])
+  @@map("categories")
+}
+
+model Product {
+  id                      String    @id @default(uuid())
+  supplier_id             String
+  category_id             String?
+  
+  // Basic Information
+  name                    String
+  slug                    String
+  sku                     String?   @unique
+  short_description       String?
+  description             String?
+  
+  // Specifications
+  specifications          Json?
+  material_type           String?
+  dimensions_json         Json?     // {length, width, height, unit}
+  weight                  Decimal?  @db.Decimal(10, 3)
+  weight_unit             String?
+  color                   String?
+  finish                  String?
+  grade                   String?
+  
+  // Pricing
+  base_price              Decimal   @db.Decimal(15, 2)
+  currency                String    @default("INR")
+  price_unit              String?   // 'piece', 'kg', 'meter', etc.
+  min_order_quantity      Int       @default(1)
+  max_order_quantity      Int?
+  
+  // Volume Pricing (Array of {min_qty, max_qty, price})
+  volume_pricing          Json?
+  
+  // Inventory
+  stock_quantity          Int       @default(0)
+  low_stock_threshold     Int       @default(10)
+  track_inventory         Boolean   @default(true)
+  stock_status            String    @default("in_stock") // 'in_stock', 'low_stock', 'out_of_stock', 'discontinued'
+  
+  // Lead Time & Delivery
+  lead_time_days          Int?
+  shipping_dimensions_json Json?
+  shipping_weight         Decimal?  @db.Decimal(10, 3)
+  
+  // Media
+  primary_image_url       String?
+  images                  Json?     // Array of image URLs
+  video_url               String?
+  ar_model_url            String?
+  technical_docs          Json?     // Array of document URLs
+  
+  // Certifications
+  certifications          String[]  // Array of UUIDs
+  certification_numbers   Json?
+  
+  // Sustainability
+  is_recyclable           Boolean   @default(false)
+  recycled_content_percentage Int?
+  is_biodegradable        Boolean   @default(false)
+  carbon_footprint_kg     Decimal?  @db.Decimal(10, 3)
+  sustainability_certifications String[]
+  
+  // SEO
+  seo_title               String?
+  seo_description         String?
+  seo_keywords            String?
+  
+  // Status & Visibility
+  status                  String    @default("draft") // 'draft', 'pending_approval', 'active', 'inactive', 'rejected'
+  visibility              String    @default("public") // 'public', 'private', 'catalog_only'
+  is_featured             Boolean   @default(false)
+  featured_until          DateTime?
+  
+  // Analytics
+  view_count              Int       @default(0)
+  inquiry_count           Int       @default(0)
+  order_count             Int       @default(0)
+  
+  // Metadata
+  tags                    String[]
+  metadata                Json?
+  // search_vector TSVECTOR
+
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @default(now()) @updatedAt
+  deleted_at              DateTime?
+
+  supplier                Organization @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  category                Category?    @relation(fields: [category_id], references: [id])
+  
+  reviews                 ProductReview[]
+  inventory               Inventory[]
+  order_items             OrderItem[]
+  cart_items              CartItem[]
+
+  @@unique([supplier_id, slug])
+  @@index([supplier_id])
+  @@index([category_id])
+  @@index([status])
+  @@index([sku])
+  @@index([base_price])
+  @@map("products")
+}
+
+model ProductReview {
+  id                    String    @id @default(uuid())
+  product_id            String
+  order_id              String?
+  buyer_id              String?
+  user_id               String?
+  
+  rating                Int
+  title                 String?
+  review_text           String?
+  images                Json?
+  
+  // Category Ratings
+  quality_rating        Int?
+  delivery_rating       Int?
+  packaging_rating      Int?
+  value_rating          Int?
+  
+  is_verified_purchase  Boolean   @default(false)
+  status                String    @default("pending") // 'pending', 'approved', 'rejected'
+  
+  helpful_count         Int       @default(0)
+  not_helpful_count     Int       @default(0)
+  
+  supplier_response     String?
+  supplier_responded_at DateTime?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  product               Product   @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  buyer                 Organization? @relation(fields: [buyer_id], references: [id])
+  user                  User?     @relation(fields: [user_id], references: [id])
+  // order relation omitted to prevent circular dependency issues for now, can be added if strict integrity needed across diverse systems
+
+  @@index([product_id])
+  @@index([buyer_id])
+  @@map("product_reviews")
+}
+
+// 4. Plants & Warehouses
+
+model Plant {
+  id                    String    @id @default(uuid())
+  buyer_id              String
+  
+  name                  String
+  code                  String?
+  type                  String?   // 'manufacturing', 'warehouse', 'office'
+  
+  // Contact
+  contact_person        String?
+  contact_email         String?
+  contact_phone         String?
+  
+  // Address
+  address_line1         String?
+  address_line2         String?
+  city                  String?
+  state                 String?
+  country               String    @default("India")
+  postal_code           String?
+  latitude              Decimal?  @db.Decimal(10, 8)
+  longitude             Decimal?  @db.Decimal(11, 8)
+  
+  // Operational Details
+  operating_hours       Json?
+  is_primary            Boolean   @default(false)
+  is_active             Boolean   @default(true)
+  
+  // JIT Settings
+  jit_enabled           Boolean   @default(false)
+  preferred_warehouse_id String?
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  buyer                 Organization @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  rfqs                  Rfq[]
+  orders                Order[]
+  cart_items            CartItem[]
+
+  @@index([buyer_id])
+  @@map("plants")
+}
+
+model Warehouse {
+  id                    String    @id @default(uuid())
+  supplier_id           String?
+  
+  name                  String
+  code                  String?
+  type                  String?   // 'own', 'third_party', 'jit'
+  
+  // Address
+  address_line1         String?
+  address_line2         String?
+  city                  String?
+  state                 String?
+  country               String    @default("India")
+  postal_code           String?
+  latitude              Decimal?  @db.Decimal(10, 8)
+  longitude             Decimal?  @db.Decimal(11, 8)
+  
+  // Capacity
+  total_capacity_sqft   Int?
+  used_capacity_sqft    Int       @default(0)
+  
+  // Operational
+  contact_person        String?
+  contact_phone         String?
+  operating_hours       Json?
+  is_active             Boolean   @default(true)
+  
+  // JIT Configuration
+  serves_plants         String[]  // Array of plant IDs
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  supplier              Organization? @relation(fields: [supplier_id], references: [id])
+  inventory             Inventory[]
+
+  @@index([supplier_id])
+  @@map("warehouses")
+}
+
+model Inventory {
+  id                    String    @id @default(uuid())
+  product_id            String
+  warehouse_id          String?
+  
+  quantity              Int       @default(0)
+  reserved_quantity     Int       @default(0)
+  // available_quantity computed column can't be defined directly in Prisma schema easily, managed in app logic
+  
+  reorder_point         Int?
+  reorder_quantity      Int?
+  
+  last_restocked_at     DateTime?
+  last_updated_at       DateTime  @default(now()) @updatedAt
+
+  product               Product   @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  warehouse             Warehouse? @relation(fields: [warehouse_id], references: [id])
+
+  @@unique([product_id, warehouse_id])
+  @@index([product_id])
+  @@index([warehouse_id])
+  @@map("inventory")
+}
+
+// 5. RFQs & RFIs
+
+model Rfq {
+  id                    String    @id @default(uuid())
+  buyer_id              String
+  created_by_id         String?
+  
+  rfq_number            String    @unique
+  title                 String
+  type                  String    @default("rfq") // 'rfq', 'rfi'
+  
+  // Product Details
+  category_id           String?
+  product_description   String
+  specifications        Json?
+  technical_documents   Json?
+  
+  // Quantity & Delivery
+  quantity              Int
+  unit_of_measurement   String?
+  delivery_plant_id     String?
+  expected_delivery_date DateTime? @db.Date
+  urgency               String?   // 'low', 'medium', 'high', 'urgent'
+  
+  // Budget & Terms
+  budget_min            Decimal?  @db.Decimal(15, 2)
+  budget_max            Decimal?  @db.Decimal(15, 2)
+  payment_terms         String?
+  contract_duration_months Int?
+  
+  // Requirements
+  quality_requirements  String?
+  certifications_required String[]
+  packaging_requirements String?
+  special_requirements  String?
+  
+  // Supplier Selection
+  supplier_selection_type String? // 'broadcast', 'selected'
+  selected_suppliers    String[]
+  
+  // Timeline
+  response_deadline     DateTime
+  published_at          DateTime?
+  closed_at             DateTime?
+  awarded_at            DateTime?
+  
+  // Status
+  status                String    @default("draft") // 'draft', 'published', 'closed', 'awarded', 'cancelled'
+  
+  // Winner
+  winning_quote_id      String?
+  
+  // Template
+  is_template           Boolean   @default(false)
+  template_name         String?
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  buyer                 Organization @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  created_by            User?      @relation(fields: [created_by_id], references: [id])
+  category              Category?  @relation(fields: [category_id], references: [id])
+  delivery_plant        Plant?     @relation(fields: [delivery_plant_id], references: [id])
+  quotes                RfqQuote[]
+
+  @@index([buyer_id])
+  @@index([status])
+  @@index([response_deadline])
+  @@map("rfqs")
+}
+
+model RfqQuote {
+  id                    String    @id @default(uuid())
+  rfq_id                String
+  supplier_id           String
+  submitted_by_id       String?
+  
+  quote_number          String    @unique
+  
+  // Pricing
+  unit_price            Decimal   @db.Decimal(15, 2)
+  total_price           Decimal   @db.Decimal(15, 2)
+  currency              String    @default("INR")
+  
+  // Terms
+  lead_time_days        Int
+  delivery_terms        String?
+  payment_terms         String?
+  validity_days         Int       @default(30)
+  valid_until           DateTime?
+  
+  // Specifications
+  specifications_compliance String?
+  proposed_specifications Json?
+  deviations            String?
+  
+  // Documents
+  documents             Json?
+  certifications_included String[]
+  
+  // Additional
+  notes                 String?
+  terms_and_conditions  String?
+  
+  // Status
+  status                String    @default("submitted") // 'submitted', 'shortlisted', 'accepted', 'rejected', 'withdrawn'
+  viewed_by_buyer_at    DateTime?
+  
+  // Negotiation
+  negotiation_rounds    Int       @default(0)
+  is_negotiable         Boolean   @default(true)
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  rfq                   Rfq       @relation(fields: [rfq_id], references: [id], onDelete: Cascade)
+  supplier              Organization @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  submitted_by          User?     @relation(fields: [submitted_by_id], references: [id])
+
+  @@index([rfq_id])
+  @@index([supplier_id])
+  @@map("rfq_quotes")
+}
+
+// 6. Orders & Transactions
+
+model Order {
+  id                    String    @id @default(uuid())
+  order_number          String    @unique
+  
+  // Parties
+  buyer_id              String?
+  supplier_id           String?
+  buyer_user_id         String?
+  
+  // Order Source
+  source                String?   // 'direct', 'rfq', 'cart', 'reorder'
+  source_reference_id   String?
+  
+  // Delivery
+  plant_id              String?
+  delivery_address      Json?
+  delivery_contact      Json?
+  requested_delivery_date DateTime? @db.Date
+  actual_delivery_date  DateTime? @db.Date
+  
+  // Financial
+  subtotal              Decimal   @db.Decimal(15, 2)
+  tax_amount            Decimal   @default(0) @db.Decimal(15, 2)
+  discount_amount       Decimal   @default(0) @db.Decimal(15, 2)
+  shipping_amount       Decimal   @default(0) @db.Decimal(15, 2)
+  total_amount          Decimal   @db.Decimal(15, 2)
+  currency              String    @default("INR")
+  
+  // Payment
+  payment_method        String?   // 'credit_terms', 'online', 'bank_transfer', 'cod'
+  payment_terms         String?
+  payment_status        String    @default("pending") // 'pending', 'partial', 'paid', 'failed', 'refunded'
+  paid_amount           Decimal   @default(0) @db.Decimal(15, 2)
+  
+  // Order Status
+  status                String    @default("pending") // 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'
+  
+  // Timestamps
+  confirmed_at          DateTime?
+  processing_at         DateTime?
+  shipped_at            DateTime?
+  delivered_at          DateTime?
+  cancelled_at          DateTime?
+  
+  // Additional
+  special_instructions  String?
+  internal_notes        String?
+  cancellation_reason   String?
+  
+  // Blockchain
+  blockchain_tx_hash    String?
+  blockchain_verified   Boolean   @default(false)
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  buyer                 Organization? @relation("BuyerOrders", fields: [buyer_id], references: [id])
+  supplier              Organization? @relation("SupplierOrders", fields: [supplier_id], references: [id])
+  buyer_user            User?         @relation(fields: [buyer_user_id], references: [id])
+  plant                 Plant?        @relation(fields: [plant_id], references: [id])
+  
+  order_items           OrderItem[]
+  status_history        OrderStatusHistory[]
+  invoices              Invoice[]
+  payments              Payment[]
+  shipments             Shipment[]
+  disputes              Dispute[]
+
+  @@index([buyer_id])
+  @@index([supplier_id])
+  @@index([status])
+  @@index([order_number])
+  @@index([created_at(sort: Desc)])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                    String    @id @default(uuid())
+  order_id              String
+  product_id            String?
+  
+  // Product Snapshot
+  product_name          String
+  product_sku           String?
+  product_specifications Json?
+  product_image_url     String?
+  
+  // Quantity & Pricing
+  quantity              Int
+  unit_price            Decimal   @db.Decimal(15, 2)
+  subtotal              Decimal   @db.Decimal(15, 2)
+  tax_amount            Decimal   @default(0) @db.Decimal(15, 2)
+  discount_amount       Decimal   @default(0) @db.Decimal(15, 2)
+  total_amount          Decimal   @db.Decimal(15, 2)
+  
+  // Delivery
+  delivered_quantity    Int       @default(0)
+  
+  // Status
+  status                String    @default("pending")
+  
+  notes                 String?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  order                 Order     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product               Product?  @relation(fields: [product_id], references: [id])
+
+  @@index([order_id])
+  @@index([product_id])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id                    String    @id @default(uuid())
+  order_id              String
+  status                String
+  notes                 String?
+  changed_by_id         String?
+  metadata              Json?
+  created_at            DateTime  @default(now())
+
+  order                 Order     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@index([order_id])
+  @@map("order_status_history")
+}
+
+model CartItem {
+  id                    String    @id @default(uuid())
+  buyer_id              String
+  user_id               String
+  product_id            String
+  
+  quantity              Int       @default(1)
+  unit_price            Decimal   @db.Decimal(15, 2)
+  subtotal              Decimal   @db.Decimal(15, 2)
+  
+  plant_id              String?
+  special_requirements  String?
+  
+  added_at              DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  buyer                 Organization @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  user                  User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  product               Product      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  plant                 Plant?       @relation(fields: [plant_id], references: [id])
+
+  @@unique([user_id, product_id])
+  @@index([user_id])
+  @@index([buyer_id])
+  @@map("cart_items")
+}
+
+// 7. Invoices & Payments
+
+model Invoice {
+  id                    String    @id @default(uuid())
+  invoice_number        String    @unique
+  
+  // Parties
+  supplier_id           String?
+  buyer_id              String?
+  order_id              String?
+  
+  // Financial
+  subtotal              Decimal   @db.Decimal(15, 2)
+  tax_amount            Decimal   @default(0) @db.Decimal(15, 2)
+  discount_amount       Decimal   @default(0) @db.Decimal(15, 2)
+  additional_charges    Decimal   @default(0) @db.Decimal(15, 2)
+  total_amount          Decimal   @db.Decimal(15, 2)
+  currency              String    @default("INR")
+  
+  // Tax Breakdown
+  tax_breakdown         Json?
+  
+  // Dates
+  invoice_date          DateTime  @db.Date
+  due_date              DateTime  @db.Date
+  
+  // Payment
+  payment_status        String    @default("unpaid") // 'unpaid', 'partial', 'paid', 'overdue', 'cancelled'
+  paid_amount           Decimal   @default(0) @db.Decimal(15, 2)
+  payment_date          DateTime? @db.Date
+  
+  // Invoice Discounting
+  is_discounted         Boolean   @default(false)
+  discounting_application_id String?
+  discounted_amount     Decimal?  @db.Decimal(15, 2)
+  discounted_at         DateTime?
+  
+  // Documents
+  invoice_pdf_url       String?
+  
+  // Status
+  status                String    @default("draft") // 'draft', 'sent', 'viewed', 'paid', 'cancelled', 'disputed'
+  sent_at               DateTime?
+  viewed_at             DateTime?
+  
+  // Dispute
+  is_disputed           Boolean   @default(false)
+  dispute_reason        String?
+  
+  notes                 String?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  supplier              Organization? @relation("SupplierInvoices", fields: [supplier_id], references: [id])
+  buyer                 Organization? @relation("BuyerInvoices", fields: [buyer_id], references: [id])
+  order                 Order?        @relation(fields: [order_id], references: [id])
+  payments              Payment[]
+  discounting_apps      InvoiceDiscountingApplication[]
+  disputes              Dispute[]
+
+  @@index([supplier_id])
+  @@index([buyer_id])
+  @@index([order_id])
+  @@index([payment_status])
+  @@index([due_date])
+  @@map("invoices")
+}
+
+model Payment {
+  id                    String    @id @default(uuid())
+  payment_reference     String    @unique
+  
+  // Parties
+  payer_id              String?
+  payee_id              String?
+  invoice_id            String?
+  order_id              String?
+  
+  // Amount
+  amount                Decimal   @db.Decimal(15, 2)
+  currency              String    @default("INR")
+  
+  // Payment Details
+  payment_method        String?   // 'card', 'upi', 'netbanking', 'wallet', 'bank_transfer'
+  payment_gateway       String?   // 'razorpay', 'stripe', 'paypal'
+  gateway_transaction_id String?
+  gateway_payment_id    String?
+  gateway_order_id      String?
+  
+  // Status
+  status                String    @default("pending") // 'pending', 'processing', 'success', 'failed', 'refunded'
+  
+  // Additional
+  payment_date          DateTime?
+  failure_reason        String?
+  refund_amount         Decimal?  @db.Decimal(15, 2)
+  refund_date           DateTime?
+  refund_reference      String?
+  
+  // Gateway Response
+  gateway_response      Json?
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  payer                 Organization? @relation("Payer", fields: [payer_id], references: [id])
+  payee                 Organization? @relation("Payee", fields: [payee_id], references: [id])
+  invoice               Invoice?      @relation(fields: [invoice_id], references: [id])
+  order                 Order?        @relation(fields: [order_id], references: [id])
+
+  @@index([payer_id])
+  @@index([payee_id])
+  @@index([invoice_id])
+  @@index([status])
+  @@map("payments")
+}
+
+model InvoiceDiscountingApplication {
+  id                    String    @id @default(uuid())
+  application_number    String    @unique
+  
+  supplier_id           String?
+  invoice_id            String?
+  
+  // Application Details
+  invoice_amount        Decimal   @db.Decimal(15, 2)
+  requested_amount      Decimal   @db.Decimal(15, 2)
+  discount_rate         Decimal?  @db.Decimal(5, 2)
+  processing_fee        Decimal?  @db.Decimal(15, 2)
+  net_amount            Decimal?  @db.Decimal(15, 2)
+  
+  // Terms
+  tenure_days           Int?
+  due_date              DateTime? @db.Date
+  repayment_amount      Decimal?  @db.Decimal(15, 2)
+  
+  // Status
+  status                String    @default("pending") // 'pending', 'approved', 'rejected', 'disbursed', 'repaid'
+  
+  // Finance Partner
+  finance_partner_id    String?
+  finance_partner_name  String?
+  
+  // Verification
+  buyer_verified        Boolean   @default(false)
+  invoice_verified      Boolean   @default(false)
+  credit_check_passed   Boolean   @default(false)
+  
+  // Approval
+  reviewed_by_id        String?
+  reviewed_at           DateTime?
+  approval_notes        String?
+  rejection_reason      String?
+  
+  // Disbursement
+  disbursed_at          DateTime?
+  disbursed_amount      Decimal?  @db.Decimal(15, 2)
+  
+  // Repayment
+  repaid_at             DateTime?
+  repaid_amount         Decimal?  @db.Decimal(15, 2)
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  supplier              Organization? @relation(fields: [supplier_id], references: [id])
+  invoice               Invoice?      @relation(fields: [invoice_id], references: [id])
+  reviewed_by           User?         @relation(fields: [reviewed_by_id], references: [id])
+
+  @@index([supplier_id])
+  @@index([invoice_id])
+  @@index([status])
+  @@map("invoice_discounting_applications")
+}
+
+// 8. Logistics & Shipping
+
+model Shipment {
+  id                    String    @id @default(uuid())
+  shipment_number       String    @unique
+  
+  order_id              String?
+  supplier_id           String?
+  buyer_id              String?
+  
+  // Logistics Partner
+  logistics_partner     String?
+  tracking_number       String?
+  awb_number            String?
+  
+  // Package Details
+  package_count         Int       @default(1)
+  total_weight          Decimal?  @db.Decimal(10, 3)
+  dimensions            Json?
+  
+  // Addresses
+  origin_address        Json?
+  destination_address   Json?
+  
+  // Status
+  status                String    @default("pending") // 'pending', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'failed', 'returned'
+  
+  // Dates
+  shipped_date          DateTime?
+  estimated_delivery_date DateTime?
+  actual_delivery_date  DateTime?
+  
+  // Tracking
+  current_location      String?
+  last_update_at        DateTime?
+  
+  // Delivery
+  delivered_to          String?
+  signature_url         String?
+  proof_of_delivery_url String?
+  
+  // Issues
+  delivery_attempts     Int       @default(0)
+  failure_reason        String?
+  
+  // Blockchain
+  blockchain_tx_hash    String?
+  blockchain_verified   Boolean   @default(false)
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  order                 Order?        @relation(fields: [order_id], references: [id])
+  supplier              Organization? @relation("SupplierShipments", fields: [supplier_id], references: [id])
+  buyer                 Organization? @relation("BuyerShipments", fields: [buyer_id], references: [id])
+  tracking_history      ShipmentTrackingHistory[]
+
+  @@index([order_id])
+  @@index([tracking_number])
+  @@index([status])
+  @@map("shipments")
+}
+
+model ShipmentTrackingHistory {
+  id                    String    @id @default(uuid())
+  shipment_id           String
+  
+  status                String
+  location              String?
+  description           String?
+  timestamp             DateTime
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+
+  shipment              Shipment  @relation(fields: [shipment_id], references: [id], onDelete: Cascade)
+
+  @@index([shipment_id])
+  @@index([timestamp(sort: Desc)])
+  @@map("shipment_tracking_history")
+}
+
+// 9. Audits & Certifications
+
+model Audit {
+  id                    String    @id @default(uuid())
+  audit_number          String    @unique
+  
+  supplier_id           String
+  auditor_id            String?
+  
+  // Audit Details
+  audit_type            String?   // 'initial', 'renewal', 'surprise', 'buyer_specific', 'follow_up'
+  audit_scope           String?
+  standards             String[]
+  
+  // Scheduling
+  scheduled_date        DateTime? @db.Date
+  scheduled_time        DateTime? @db.Time
+  duration_hours        Int?
+  
+  // Status
+  status                String    @default("scheduled") // 'scheduled', 'in_progress', 'completed', 'cancelled'
+  
+  // Results
+  overall_score         Decimal?  @db.Decimal(5, 2)
+  passed                Boolean?
+  findings              Json?
+  non_conformances      Json?
+  observations          String?
+  recommendations       String?
+  
+  // Documents
+  checklist_url         String?
+  report_url            String?
+  photos                Json?
+  evidence_documents    Json?
+  
+  // Dates
+  conducted_date        DateTime? @db.Date
+  report_submitted_date DateTime? @db.Date
+  report_approved_date  DateTime? @db.Date
+  
+  // Follow-up
+  requires_follow_up    Boolean   @default(false)
+  follow_up_date        DateTime? @db.Date
+  follow_up_audit_id    String?
+  
+  // Corrective Actions
+  corrective_actions    Json?
+  corrective_actions_due_date DateTime? @db.Date
+  corrective_actions_completed Boolean @default(false)
+  
+  notes                 String?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  supplier              Organization @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  auditor               User?        @relation("Auditor", fields: [auditor_id], references: [id])
+  follow_up_audit       Audit?       @relation("FollowUpAudit", fields: [follow_up_audit_id], references: [id])
+  previous_audit_follow_up Audit[]   @relation("FollowUpAudit")
+
+  @@index([supplier_id])
+  @@index([auditor_id])
+  @@index([status])
+  @@index([scheduled_date])
+  @@map("audits")
+}
+
+model Certification {
+  id                    String    @id @default(uuid())
+  organization_id       String
+  
+  // Certification Details
+  certification_type    String    // 'ISO 9001', 'ISO 14001', 'FDA', 'BRC', 'HACCP', etc.
+  certification_number  String?
+  certification_name    String?
+  
+  // Issuing Authority
+  issuing_authority     String
+  accreditation_body    String?
+  
+  // Dates
+  issue_date            DateTime  @db.Date
+  expiry_date           DateTime  @db.Date
+  last_renewal_date     DateTime? @db.Date
+  next_renewal_date     DateTime? @db.Date
+  
+  // Scope
+  scope                 String?
+  covered_products      String[]
+  covered_facilities    String[]
+  
+  // Document
+  certificate_url       String?
+  document_hash         String?
+  
+  // Verification
+  verification_status   String    @default("pending") // 'pending', 'verified', 'rejected', 'expired'
+  verified_by_id        String?
+  verified_at           DateTime?
+  verification_notes    String?
+  
+  // Status
+  status                String    @default("active") // 'active', 'expired', 'suspended', 'revoked'
+  
+  // Notifications
+  expiry_notification_sent Boolean @default(false)
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  organization          Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  verified_by           User?        @relation(fields: [verified_by_id], references: [id])
+
+  @@index([organization_id])
+  @@index([certification_type])
+  @@index([expiry_date])
+  @@index([status])
+  @@map("certifications")
+}
+
+// 10. Communication & Messaging
+
+model Conversation {
+  id                    String    @id @default(uuid())
+  
+  // Participants
+  participant_1_id      String?
+  participant_2_id      String?
+  
+  // Context
+  context_type          String?   // 'general', 'order', 'rfq', 'product', 'support'
+  context_id            String?
+  
+  // Status
+  status                String    @default("active") // 'active', 'archived', 'blocked'
+  
+  // Last Message
+  last_message_at       DateTime?
+  last_message_preview  String?
+  
+  // Unread Counts
+  unread_count_p1       Int       @default(0)
+  unread_count_p2       Int       @default(0)
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  participant_1         Organization? @relation("Participant1", fields: [participant_1_id], references: [id])
+  participant_2         Organization? @relation("Participant2", fields: [participant_2_id], references: [id])
+  messages              Message[]
+
+  @@unique([participant_1_id, participant_2_id, context_type, context_id])
+  @@index([participant_1_id])
+  @@index([participant_2_id])
+  @@index([last_message_at(sort: Desc)])
+  @@map("conversations")
+}
+
+model Message {
+  id                    String    @id @default(uuid())
+  conversation_id       String
+  
+  sender_id             String?
+  sender_org_id         String?
+  
+  message_type          String    @default("text") // 'text', 'file', 'image', 'system'
+  message_text          String?
+  
+  // Attachments
+  attachments           Json?
+  
+  // Status
+  is_read               Boolean   @default(false)
+  read_at               DateTime?
+  
+  // Reply Reference
+  reply_to_message_id   String?
+  
+  // System Message
+  is_system_message     Boolean   @default(false)
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  conversation          Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender                User?        @relation(fields: [sender_id], references: [id])
+  sender_org            Organization? @relation(fields: [sender_org_id], references: [id])
+  reply_to_message      Message?     @relation("ReplyTo", fields: [reply_to_message_id], references: [id])
+  replies               Message[]    @relation("ReplyTo")
+
+  @@index([conversation_id])
+  @@index([sender_id])
+  @@index([created_at(sort: Desc)])
+  @@map("messages")
+}
+
+// 11. Notifications
+
+model Notification {
+  id                    String    @id @default(uuid())
+  user_id               String?
+  organization_id       String?
+  
+  // Notification Details
+  type                  String    // 'order', 'rfq', 'payment', 'message', 'system', etc.
+  category              String?   // 'info', 'success', 'warning', 'error'
+  title                 String
+  message               String
+  
+  // Action
+  action_url            String?
+  action_text           String?
+  
+  // Context
+  context_type          String?
+  context_id            String?
+  
+  // Status
+  is_read               Boolean   @default(false)
+  read_at               DateTime?
+  
+  // Channels
+  sent_via_email        Boolean   @default(false)
+  sent_via_sms          Boolean   @default(false)
+  sent_via_push         Boolean   @default(false)
+  
+  // Priority
+  priority              String    @default("normal") // 'low', 'normal', 'high', 'urgent'
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  expires_at            DateTime?
+
+  user                  User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organization          Organization? @relation(fields: [organization_id], references: [id])
+
+  @@index([user_id])
+  @@index([organization_id])
+  @@index([is_read])
+  @@index([created_at(sort: Desc)])
+  @@map("notifications")
+}
+
+// 12. Reviews & Ratings
+
+model SupplierReview {
+  id                    String    @id @default(uuid())
+  supplier_id           String
+  buyer_id              String?
+  user_id               String?
+  order_id              String?
+  
+  // Overall Rating
+  overall_rating        Int
+  
+  // Category Ratings
+  product_quality_rating Int?
+  delivery_time_rating  Int?
+  communication_rating  Int?
+  packaging_quality_rating Int?
+  value_for_money_rating Int?
+  
+  // Review
+  title                 String?
+  review_text           String?
+  
+  // Verification
+  is_verified           Boolean   @default(true)
+  
+  // Interaction
+  helpful_count         Int       @default(0)
+  not_helpful_count     Int       @default(0)
+  
+  // Supplier Response
+  supplier_response     String?
+  supplier_responded_at DateTime?
+  supplier_responded_by String?
+  
+  // Moderation
+  status                String    @default("approved") // 'pending', 'approved', 'rejected'
+  moderation_notes      String?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  supplier              Organization @relation("SupplierReviewsReceived", fields: [supplier_id], references: [id], onDelete: Cascade)
+  buyer                 Organization? @relation("SupplierReviewsGiven", fields: [buyer_id], references: [id])
+  user                  User?         @relation(fields: [user_id], references: [id])
+
+  @@index([supplier_id])
+  @@index([buyer_id])
+  @@index([order_id])
+  @@map("supplier_reviews")
+}
+
+// 13. Analytics
+
+model AnalyticsEvent {
+  id                    String    @id @default(uuid())
+  
+  // Event Details
+  event_name            String
+  event_category        String?
+  event_action          String?
+  event_label           String?
+  event_value           Decimal?  @db.Decimal(15, 2)
+  
+  // User Context
+  user_id               String?
+  organization_id       String?
+  session_id            String?
+  
+  // Device & Browser
+  ip_address            String?
+  user_agent            String?
+  device_type           String?
+  browser               String?
+  os                    String?
+  
+  // Location
+  country               String?
+  state                 String?
+  city                  String?
+  
+  // Page Context
+  page_url              String?
+  page_title            String?
+  referrer_url          String?
+  
+  // UTM Parameters
+  utm_source            String?
+  utm_medium            String?
+  utm_campaign          String?
+  utm_term              String?
+  utm_content           String?
+  
+  // Additional Data
+  properties            Json?
+  
+  created_at            DateTime  @default(now())
+
+  user                  User?         @relation(fields: [user_id], references: [id])
+  organization          Organization? @relation(fields: [organization_id], references: [id])
+
+  @@index([event_name])
+  @@index([user_id])
+  @@index([organization_id])
+  @@index([created_at(sort: Desc)])
+  @@map("analytics_events")
+}
+
+// 14. Documents
+
+model Document {
+  id                    String    @id @default(uuid())
+  
+  // Owner
+  owner_type            String?   // 'organization', 'user', 'order', 'rfq', 'audit', etc.
+  owner_id              String?
+  
+  // Document Details
+  document_type         String?   // 'invoice', 'po', 'certificate', 'audit_report', 'contract', etc.
+  document_name         String
+  file_name             String
+  file_url              String
+  file_size             BigInt?
+  mime_type             String?
+  
+  // Metadata
+  description           String?
+  tags                  String[]
+  
+  // Version Control
+  version               Int       @default(1)
+  parent_document_id    String?
+  
+  // Security
+  is_public             Boolean   @default(false)
+  access_permissions    Json?
+  
+  // Verification
+  document_hash         String?
+  is_verified           Boolean   @default(false)
+  verified_by_id        String?
+  verified_at           DateTime?
+  
+  // Expiry
+  expires_at            DateTime?
+  
+  uploaded_by_id        String?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+  deleted_at            DateTime?
+
+  parent_document       Document? @relation("DocumentVersions", fields: [parent_document_id], references: [id])
+  versions              Document[] @relation("DocumentVersions")
+  uploaded_by           User?     @relation(fields: [uploaded_by_id], references: [id])
+
+  @@index([owner_type, owner_id])
+  @@index([document_type])
+  @@map("documents")
+}
+
+// 15. Disputes & Support
+
+model Dispute {
+  id                    String    @id @default(uuid())
+  dispute_number        String    @unique
+  
+  // Parties
+  raised_by_type        String?   // 'buyer', 'supplier'
+  raised_by_id          String?
+  against_id            String?
+  
+  // Context
+  dispute_type          String?   // 'payment', 'quality', 'delivery', 'pricing', 'other'
+  order_id              String?
+  invoice_id            String?
+  
+  // Dispute Details
+  subject               String
+  description           String
+  evidence_documents    Json?
+  expected_resolution   String?
+  
+  // Response
+  response_text         String?
+  responded_by_id       String?
+  responded_at          DateTime?
+  
+  // Status
+  status                String    @default("open") // 'open', 'investigating', 'resolved', 'closed', 'escalated'
+  priority              String    @default("medium") // 'low', 'medium', 'high', 'critical'
+  
+  // Resolution
+  resolution_type       String?   // 'refund', 'replacement', 'credit', 'rejected', 'other'
+  resolution_notes      String?
+  resolved_by_id        String?
+  resolved_at           DateTime?
+  
+  // Escalation
+  escalated_to_id       String?
+  escalated_at          DateTime?
+  escalation_reason     String?
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  raised_by             Organization? @relation("DisputesRaised", fields: [raised_by_id], references: [id])
+  against               Organization? @relation("DisputesAgainst", fields: [against_id], references: [id])
+  order                 Order?        @relation(fields: [order_id], references: [id])
+  invoice               Invoice?      @relation(fields: [invoice_id], references: [id])
+  responded_by          User?         @relation("RespondedDisputes", fields: [responded_by_id], references: [id])
+  resolved_by           User?         @relation("ResolvedDisputes", fields: [resolved_by_id], references: [id])
+  escalated_to          User?         @relation("EscalatedDisputes", fields: [escalated_to_id], references: [id])
+
+  @@index([raised_by_id])
+  @@index([against_id])
+  @@index([order_id])
+  @@index([status])
+  @@map("disputes")
+}
+
+model SupportTicket {
+  id                    String    @id @default(uuid())
+  ticket_number         String    @unique
+  
+  user_id               String?
+  organization_id       String?
+  
+  // Ticket Details
+  category              String?   // 'technical', 'billing', 'account', 'order', 'general'
+  subject               String
+  description           String
+  priority              String    @default("normal") // 'low', 'normal', 'high', 'urgent'
+  
+  // Assignment
+  assigned_to_id        String?
+  assigned_at           DateTime?
+  
+  // Status
+  status                String    @default("open") // 'open', 'in_progress', 'waiting_customer', 'resolved', 'closed'
+  
+  // Resolution
+  resolution            String?
+  resolved_by_id        String?
+  resolved_at           DateTime?
+  
+  // Satisfaction
+  satisfaction_rating   Int?
+  satisfaction_feedback String?
+  
+  // Attachments
+  attachments           Json?
+  
+  metadata              Json?
+  
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  user                  User?     @relation(fields: [user_id], references: [id])
+  organization          Organization? @relation(fields: [organization_id], references: [id])
+  assigned_to           User?     @relation("AssignedSupportTickets", fields: [assigned_to_id], references: [id])
+  resolved_by           User?     @relation("ResolvedSupportTickets", fields: [resolved_by_id], references: [id])
+
+  @@index([user_id])
+  @@index([organization_id])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+// 16. System
+
+model SystemSetting {
+  id                    String    @id @default(uuid())
+  setting_key           String    @unique
+  setting_value         Json
+  setting_type          String?   // 'string', 'number', 'boolean', 'json'
+  description           String?
+  is_public             Boolean   @default(false)
+  updated_by_id         String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now()) @updatedAt
+
+  updated_by            User?     @relation(fields: [updated_by_id], references: [id])
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id                    String    @id @default(uuid())
+  
+  // Who
+  user_id               String?
+  organization_id       String?
+  
+  // What
+  entity_type           String?   // 'user', 'organization', 'order', 'product', etc.
+  entity_id             String?
+  action                String?   // 'create', 'update', 'delete', 'view', etc.
+  
+  // When
+  timestamp             DateTime  @default(now())
+  
+  // Where
+  ip_address            String?
+  user_agent            String?
+  
+  // Changes
+  changes               Json?     // {before: {}, after: {}}
+  
+  // Context
+  metadata              Json?
+
+  user                  User?         @relation(fields: [user_id], references: [id])
+  organization          Organization? @relation(fields: [organization_id], references: [id])
+
+  @@index([user_id])
+  @@index([entity_type, entity_id])
+  @@index([timestamp(sort: Desc)])
+  @@map("audit_logs")
+}

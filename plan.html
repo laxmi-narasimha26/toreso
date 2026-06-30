@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toreso - Interactive Strategic Blueprint</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f8f9fa; overscroll-behavior: none; }
+        #chart-container { position: relative; background: #fff; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        .tooltip { position: absolute; opacity: 0; background: rgba(33, 37, 41, 0.95); backdrop-filter: blur(5px); color: #fff; padding: 15px; border-radius: 8px; pointer-events: none; transition: opacity 0.3s ease; max-width: 380px; font-size: 14px; line-height: 1.6; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border: 1px solid #495057;z-index: 100;}
+        .tooltip h4 { margin-top: 0; margin-bottom: 10px; font-size: 17px; color: #53a6ec; display: flex; align-items: center; }
+        .tooltip h4 i { margin-right: 10px; }
+        .tooltip p { margin-bottom: 5px; color: #ced4da; }
+        .tooltip .ref { color: #87bffd; font-style: italic; font-size: 12px; margin-top: 10px; display: block; border-top: 1px solid #495057; padding-top: 8px;}
+        svg { display: block; }
+        .link { stroke: #adb5bd; }
+        .link.tech-link { stroke: #ff9100; stroke-dasharray: 4 2; }
+    </style>
+</head>
+<body>
+
+<div id="chart-container">
+    <h1 style="text-align: center; padding: 30px 20px 0 20px; color: #212529; font-weight: 600;">Toreso: Interactive Strategic Blueprint</h1>
+    <p style="text-align: center; color: #6c757d; margin-top: -10px; padding-bottom: 20px;">Hover over any node to see its strategic justification.</p>
+    <svg id="chart"></svg>
+</div>
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+    const width = window.innerWidth;
+    const height = window.innerHeight * 1.5;
+
+    const graphData = {
+        "nodes": [
+            {"id": "buyerPersona", "group": 0, "size": 35, "icon": "\uf007", "text": "Enterprise Buyer"},
+            {"id": "supplierPersona", "group": 0, "size": 35, "icon": "\uf54e", "text": "MSME Supplier"},
+            {"id": "homepage", "group": 1, "size": 30, "icon": "\uf0c8", "text": "Public Homepage", "description": "<h4>Homepage: Our Digital Storefront</h4><p>The entire user journey begins here. Its purpose is to efficiently filter visitors and guide them towards the most relevant value proposition, ultimately leading to a conversion (lead capture).</p>"},
+            {"id": "hero", "group": 1, "size": 18, "icon": "\uf135", "text": "Hero Section", "description": "<h4>Hero: Value Proposition</h4><p>Immediately articulates our core financial benefit to capture attention.</p><p class='ref'>Ref: GOAL 5 (Volume Discounts)</p>"},
+            {"id": "cta_projection", "group": 1, "size": 15, "icon": "\uf1ec", "text": "CTA: Savings Analysis", "description": "<h4>CTA: Savings Analysis</h4><p>Our primary call-to-action. Far more powerful than 'Request a Demo,' because it promises immediate, personalized financial value.</p>"},
+            {"id": "cta_rfq", "group": 1, "size": 15, "icon": "\uf3f6", "text": "CTA: Post RFQ", "description": "<h4>CTA: Post RFQ</h4><p>Caters to users who are transaction-ready and provides a direct path to platform utility.</p><p class='ref'>Ref: GOAL 12 (Easy RFQ Uploading)</p>"},
+            {"id": "interactiveDemo", "group": 1, "size": 18, "icon": "\uf1b2", "text": "Interactive Calculator", "description": "<h4>Interactive Demo: The Believability Engine</h4><p>Transforms our abstract concept of savings into a tangible, interactive experience. This is our key 'wow' factor designed to convert mid-funnel prospects.</p><p class='ref'>Ref: GOAL 5</p>"},
+            {"id": "solutions", "group": 1, "size": 18, "icon": "\uf0e8", "text": "Solution Showcase", "description": "<h4>Solution Showcase: Guided Exploration</h4><p>Presents our rich feature-set in digestible, benefit-oriented categories to prevent overwhelming the user while still showcasing platform depth.</p>"},
+            {"id": "supplierPortal", "group": 2, "size": 30, "icon": "\uf56d", "text": "Supplier Portal", "description": "<h4>Supplier Portal: The Growth Engine</h4><p>This is where our supplier partners live. Every feature is designed to make their business more efficient, profitable, and scalable.</p>"},
+            {"id": "sp_dashboard", "group": 2, "size": 18, "icon": "\uf3fd", "text": "Dashboard", "description": "<h4>Dashboard: Mission Control</h4><p>Provides an at-a-glance view of everything that requires the supplier's immediate attention, from new orders to performance metrics and alerts.</p>"},
+            {"id": "sp_pricing", "group": 2, "size": 18, "icon": "\uf156", "text": "Dynamic Pricing Studio", "description": "<h4>Dynamic Pricing Studio</h4><p>The tool that allows suppliers to set volume-based discount tiers. This is the mechanism that powers our core business model.</p><p class='ref'>Ref: BENEFIT FOR SUPPLIERS 9, 16</p>"},
+            {"id": "sp_orders", "group": 2, "size": 18, "icon": "\uf49e", "text": "Kanban Order Board", "description": "<h4>Kanban Order Board</h4><p>A visual, intuitive method for managing the production pipeline, superior to traditional tables. Provides clarity and improves operational efficiency.</p>"},
+            {"id": "sp_finance", "group": 2, "size": 18, "icon": "\uf555", "text": "Financial Hub", "description": "<h4>Financial Hub: The Cash Flow Accelerator</h4><p>The main feature here is the 'Request Early Payment' button. It directly addresses the most critical pain point for MSMEs—cash flow.</p><p class='ref'>Ref: GOAL 11 (Invoice Discounting)</p>"},
+            {"id": "sp_compliance", "group": 2, "size": 18, "icon": "\uf21b", "text": "Compliance Hub", "description": "<h4>Compliance Hub: The Trust Gateway</h4><p>A centralized portal for managing all audit schedules and certification documents. It simplifies a complex process and reinforces our commitment to quality.</p><p class='ref'>Ref: GOAL 7, 8</p>"},
+            {"id": "nextjs", "group": 3, "size": 25, "icon": "\uf41b", "text": "Next.js", "description": "<h4>Tech: Frontend Framework</h4><p>Builds a blazingly-fast user interface. Chosen for its Server-Side Rendering capabilities which are crucial for performance and SEO, establishing a premium, lag-free user experience.</p>"},
+            {"id": "go_nestjs", "group": 3, "size": 25, "icon": "\uf399", "text": "Go + NestJS", "description": "<h4>Tech: Backend Languages</h4><p>A polyglot approach. Go for high-performance financial & order processing services; NestJS (Node.js) for rapid development of client-facing APIs like user profiles and content management.</p>"},
+            {"id": "kafka", "group": 3, "size": 25, "icon": "\uf3ad", "text": "Apache Kafka", "description": "<h4>Tech: Asynchronous Messaging</h4><p>The 'nervous system' of our backend. Decouples our services for extreme resilience. An order confirmation can trigger notifications, invoice generation, and updates to supplier analytics all at once, without waiting for each other.</p>"},
+            {"id": "db_stack", "group": 3, "size": 25, "icon": "\uf1c0", "text": "Multi-Model Databases", "description": "<h4>Tech: Purpose-Built Data Storage</h4><p>Instead of a one-size-fits-all database, we use specific databases for specific jobs: Distributed SQL for transactions, Vector DB for AI Search, and a Graph DB for supply chain analysis. This is a hallmark of world-class system architecture.</p>"},
+            {"id": "aws", "group": 3, "size": 30, "icon": "\uf3ed", "text": "AWS Infrastructure", "description": "<h4>Tech: Cloud Foundation</h4><p>Amazon Web Services provides a secure, scalable, and globally-available infrastructure, allowing us to serve clients worldwide with high uptime and reliability.</p>"},
+            {"id": "backendServices", "group": 4, "size": 30, "icon": "\uf233", "text": "Backend Microservices"},
+            {"id": "orderService", "group": 4, "size": 20, "icon": "\uf0e4", "text": "Order Aggregation Service", "description": "<h4>Service: Order Aggregation</h4><p>The technical home of our core business logic. This service is responsible for the complex task of consolidating multiple plant-level requests into a single, optimized order for a supplier.</p>"},
+            {"id": "productService", "group": 4, "size": 20, "icon": "\uf466", "text": "Product & Pricing Service", "description": "<h4>Service: Product & Pricing</h4><p>Stores all product catalog information and, crucially, manages the multi-tiered pricing matrices set by the suppliers in their 'Pricing Studio'. Feeds real-time data to buyer carts.</p>"},
+            {"id": "financeService", "group": 4, "size": 20, "icon": "\uf53a", "text": "Financial Service", "description": "<h4>Service: Financials</h4><p>Dedicated to managing all financial transactions, including secure payment processing, invoicing workflows, and orchestration of the invoice discounting feature.</p>"},
+            {"id": "auditService", "group": 4, "size": 20, "icon": "\uf21b", "text": "Audit & Compliance Service", "description": "<h4>Service: Audit & Compliance</h4><p>Manages the lifecycle of supplier audits, stores certification documents securely, and programmatically enforces our 'must be audited to sell' business rule.</p>"}
+        ],
+        "links": [
+            {"source": "buyerPersona", "target": "homepage", "value": 1},
+            {"source": "supplierPersona", "target": "homepage", "value": 1},
+            {"source": "homepage", "target": "hero", "value": 1},
+            {"source": "homepage", "target": "interactiveDemo", "value": 1},
+            {"source": "homepage", "target": "solutions", "value": 1},
+            {"source": "supplierPersona", "target": "supplierPortal", "value": 1},
+            {"source": "supplierPortal", "target": "sp_dashboard", "value": 1},
+            {"source": "supplierPortal", "target": "sp_pricing", "value": 1},
+            {"source": "supplierPortal", "target": "sp_orders", "value": 1},
+            {"source": "supplierPortal", "target": "sp_finance", "value": 1},
+            {"source": "supplierPortal", "target": "sp_compliance", "value": 1},
+            {"source": "homepage", "target": "nextjs", "value": 1, "type": "tech"},
+            {"source": "supplierPortal", "target": "nextjs", "value": 1, "type": "tech"},
+            {"source": "nextjs", "target": "aws", "value": 1, "type": "tech"},
+            {"source": "backendServices", "target": "go_nestjs", "value": 1, "type": "tech"},
+            {"source": "backendServices", "target": "kafka", "value": 1, "type": "tech"},
+            {"source": "backendServices", "target": "aws", "value": 1, "type": "tech"},
+            {"source": "go_nestjs", "target": "db_stack", "value": 1, "type": "tech"},
+            {"source": "db_stack", "target": "aws", "value": 1, "type": "tech"},
+            {"source": "backendServices", "target": "orderService", "value": 1},
+            {"source": "backendServices", "target": "productService", "value": 1},
+            {"source": "backendServices", "target": "financeService", "value": 1},
+            {"source": "backendServices", "target": "auditService", "value": 1},
+            {"source": "sp_pricing", "target": "productService", "value": 1},
+            {"source": "sp_orders", "target": "orderService", "value": 1},
+            {"source": "sp_finance", "target": "financeService", "value": 1},
+            {"source": "sp_compliance", "target": "auditService", "value": 1}
+        ]
+    };
+
+    const color = (group) => {
+        const scheme = ["#6c757d", "#0d6efd", "#20c997", "#ffc107", "#dc3545"];
+        return scheme[group] || "#6c757d";
+    };
+
+    const svg = d3.select("svg#chart")
+                  .attr("width", width)
+                  .attr("height", height)
+                  .attr("viewBox", [0, 0, width, height]);
+
+    const simulation = d3.forceSimulation(graphData.nodes)
+        .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(d => {
+             return (d.source.group == d.target.group) ? 100 : 150;
+        }))
+        .force("charge", d3.forceManyBody().strength(d => d.group === 0 ? -2000 : -1000))
+        .force("center", d3.forceCenter(width / 2, height / 2.2))
+        .force("x", d3.forceX().strength(0.05))
+        .force("y", d3.forceY().strength(0.05))
+        .force("collision", d3.forceCollide().radius(d => d.size + 15).strength(0.8));
+
+    const link = svg.append("g")
+        .selectAll("path")
+        .data(graphData.links)
+        .join("path")
+        .attr("class", d => d.type === "tech" ? "link tech-link" : "link")
+        .attr("stroke-width", 2);
+
+    const node = svg.append("g")
+      .selectAll("g")
+      .data(graphData.nodes)
+      .join("g")
+      .call(drag(simulation));
+
+    node.append("circle")
+        .attr("r", d => d.size)
+        .attr("fill", d => color(d.group))
+        .attr("stroke", d => d3.color(color(d.group)).darker(1))
+        .attr("stroke-width", 2.5);
+
+    node.append("text")
+        .attr("class", "node-icon")
+        .attr("fill", "white")
+        .attr("font-size", d => d.size * 0.9)
+        .attr("font-family", "FontAwesome")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .text(d => d.icon);
+
+    const labels = svg.append("g")
+        .selectAll("text.label")
+        .data(graphData.nodes)
+        .join("text")
+        .attr("class", "label")
+        .text(d => d.text)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("font-weight", 500)
+        .attr("fill", "#343a40")
+        .attr("pointer-events", "none");
+
+    const tooltip = d3.select(".tooltip");
+    node
+        .on("mouseover", function(event, d) {
+             d3.select(this).select("circle").transition().duration(200).attr("r", d.size * 1.2);
+             tooltip.transition().duration(200).style("opacity", 1);
+             tooltip.html(`<h4><i class="fas ${d.icon}"></i> ${d.text}</h4>${d.description || ''}`)
+                .style("left", (event.pageX + 20) + "px")
+                .style("top", (event.pageY + 20) + "px");
+        })
+        .on("mouseout", function(event, d) {
+            d3.select(this).select("circle").transition().duration(500).attr("r", d.size);
+            tooltip.transition().duration(500).style("opacity", 0);
+        });
+
+    simulation.on("tick", () => {
+        link.attr("d", d => {
+            return `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`;
+        });
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+        labels
+            .attr("x", d => d.x)
+            .attr("y", d => d.y + d.size + 15);
+    });
+
+    function drag(simulation) {
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x; d.fy = d.y;
+        }
+        function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null; d.fy = null;
+        }
+        return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+    }
+</script>
+
+</body>
+</html>
