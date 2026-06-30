@@ -8,6 +8,7 @@ import { ToresoMark } from "@/components/brand/ToresoMark";
 const navLinks = [
   { label: "Shop", href: "/products" },
   { label: "Aisles", href: "/packaging-categories" },
+  { label: "Sustainability", href: "/sustainability" },
   { label: "Guides", href: "/guides" },
   { label: "Answers", href: "/answers" },
   { label: "Compare", href: "/compare" },

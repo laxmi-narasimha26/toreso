@@ -47,7 +47,7 @@ const productVideos = [
     title: "Paper, film, fold, repeat.",
   },
   {
-    src: "/brand-assets/videos/packing-motion-1080.mp4",
+    src: "/brand-assets/videos/recyclable-packaging-table-hd.mp4",
     label: "Pack",
     title: "A shelf with motion.",
   },
@@ -96,7 +96,7 @@ export default function ProductsPage() {
           <div className="relative mx-auto min-h-[82vh] max-w-[1860px] overflow-hidden rounded-[2rem] bg-[#111111] text-[#f5f1eb] shadow-[0_24px_90px_rgba(17,17,17,0.18)]">
             <video
               className="absolute inset-0 h-full w-full object-cover opacity-42"
-              src="/brand-assets/videos/packing-motion-1080.mp4"
+              src="/brand-assets/videos/circular-packaging-flow-uhd.mp4"
               autoPlay
               muted
               loop

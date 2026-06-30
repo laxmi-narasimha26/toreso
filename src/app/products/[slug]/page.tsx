@@ -20,7 +20,7 @@ type PageProps = {
 const shapes = ["roller", "mailer", "tape", "pouch", "honeycomb", "label"] as const;
 const videoByTrack: Record<string, string> = {
   "Heat Sealing & Resealing Gadgets": "/brand-assets/videos/seamless-heat-seal-demo.mp4",
-  "Mini Stretch Film & Wrapping Reinventions": "/brand-assets/videos/packing-motion-1080.mp4",
+  "Mini Stretch Film & Wrapping Reinventions": "/brand-assets/videos/recyclable-packaging-table-hd.mp4",
   "Cushioning & Shipping Protection (bubble/void-fill/foam reinvention)": "/brand-assets/videos/material-loop-720.mp4",
 };
 

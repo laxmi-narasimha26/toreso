@@ -16,6 +16,7 @@ const footerSections = [
   {
     title: "Materials",
     links: [
+      { label: "Sustainability hub", href: "/sustainability" },
       { label: "Material guide", href: "/materials" },
       { label: "Recycle guide", href: "/recycle-guide" },
       { label: "HoneyWrap Roll", href: "/products/honeywrap-roll" },
@@ -35,6 +36,7 @@ const footerSections = [
   {
     title: "Learn",
     links: [
+      { label: "Sustainability hub", href: "/sustainability" },
       { label: "Packaging guides", href: "/guides" },
       { label: "Quick answers", href: "/answers" },
       { label: "Product comparisons", href: "/compare" },
