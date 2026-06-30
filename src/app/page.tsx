@@ -90,17 +90,42 @@ export default function Home() {
       "@context": "https://schema.org",
       "@type": "ItemList",
       name: "Featured Toreso packaging products",
-      itemListElement: heroProducts.map((product, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        url: `https://toreso.com/products/${product.slug}`,
-        item: {
-          "@type": "Product",
-          name: product.name,
-          category: product.aisle,
-          description: product.b2cInnovation,
-        },
-      })),
+      itemListElement: heroProducts.map((product, index) => {
+        const profile = getCommerceProfile(product);
+        const productUrl = `https://toreso.com/products/${product.slug}`;
+
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          url: productUrl,
+          item: {
+            "@type": "Product",
+            name: product.name,
+            sku: profile.sku,
+            brand: { "@type": "Brand", name: "Toreso" },
+            category: product.aisle,
+            description: product.b2cInnovation,
+            url: productUrl,
+            offers: {
+              "@type": "Offer",
+              price: profile.price,
+              priceCurrency: "INR",
+              availability: "https://schema.org/InStock",
+              itemCondition: "https://schema.org/NewCondition",
+              url: productUrl,
+              seller: {
+                "@type": "Organization",
+                name: "Toreso",
+              },
+            },
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: profile.rating,
+              reviewCount: profile.reviews,
+            },
+          },
+        };
+      }),
     },
   ];
 
