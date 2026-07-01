@@ -22,17 +22,6 @@ export const metadata: Metadata = {
   },
 };
 
-const heroProducts = innovationProducts.filter((product) =>
-  [
-    "toreso-snapseal-mini",
-    "toreso-wraproller-mini",
-    "toreso-freshorb-ethylene-absorber",
-    "honeywrap-roll",
-    "toreso-dryhang-closet-bag",
-  ].includes(product.slug),
-);
-
-const featuredCategories = innovationCategories.slice(0, 10);
 const shelfProducts = innovationProducts;
 
 const productVideos = [
@@ -42,9 +31,9 @@ const productVideos = [
     title: "Watch the edge close.",
   },
   {
-    src: "/brand-assets/videos/material-loop-720.mp4",
+    src: "/brand-assets/videos/paper-fiber-loop-hd.mp4",
     label: "Texture",
-    title: "Paper, film, fold, repeat.",
+    title: "Fiber, film, fold, repeat.",
   },
   {
     src: "/brand-assets/videos/recyclable-packaging-table-hd.mp4",
@@ -52,6 +41,67 @@ const productVideos = [
     title: "A shelf with motion.",
   },
 ];
+
+const shelfVideos = [
+  "/brand-assets/videos/recyclable-packaging-table-hd.mp4",
+  "/brand-assets/videos/paper-fiber-loop-hd.mp4",
+  "/brand-assets/videos/earth-material-recovery-uhd.mp4",
+  "/brand-assets/videos/nature-packaging-system-uhd.mp4",
+  "/brand-assets/videos/recycling-sort-loop-hd.mp4",
+  "/brand-assets/videos/vertical-material-closeup-hd.mp4",
+  "/brand-assets/videos/vertical-reuse-detail-hd.mp4",
+  "/brand-assets/videos/vertical-earth-care-uhd.mp4",
+  "/brand-assets/videos/circular-packaging-flow-uhd.mp4",
+];
+
+const departmentShelves = [
+  {
+    title: "Kitchen Reseal Studio",
+    text: "Seal, pour, vacuum, portion, preserve, and organize opened food packs.",
+    categorySlugs: [
+      "heat-sealing-and-resealing-gadgets",
+      "vacuum-sealing-and-food-compression",
+      "bag-clips-pour-spouts-and-resealable-closures",
+      "reusable-silicone-solutions",
+      "fridge-and-pantry-organization",
+      "portion-snack-and-lunch-packaging",
+      "bottle-liquid-and-beverage-sealing",
+      "specialty-sealing-and-preservation-advanced",
+    ],
+  },
+  {
+    title: "Ship, Wrap & Return",
+    text: "Small-seller and home dispatch formats for cleaner protection and return-ready parcels.",
+    categorySlugs: [
+      "cushioning-and-shipping-protection-bubble-void-fill-foam-reinvention",
+      "mini-stretch-film-and-wrapping-reinventions",
+      "label-sticker-and-identification-solutions",
+      "cable-cord-and-tech-small-item-containment",
+    ],
+  },
+  {
+    title: "Freshness & Care Lab",
+    text: "Moisture, anti-tarnish, closet, home storage, and small-value protection.",
+    categorySlugs: [
+      "freshness-and-moisture-control-vci-desiccant-reinvention",
+      "jewelry-silver-and-small-valuables-protection-vci-anti-tarnish-reinvention",
+      "home-closet-and-bathroom-storage-extensions",
+    ],
+  },
+  {
+    title: "Travel & Outdoor Pack Bar",
+    text: "Compression, leak control, cooler, dry-bag, picnic, and carry formats.",
+    categorySlugs: ["travel-packing-and-clothes-compression", "outdoor-picnic-and-on-the-go-packaging"],
+  },
+  {
+    title: "Gift, Festival & Fun Desk",
+    text: "Reusable presentation, cutters, festival kits, impulse storage, and functional fun.",
+    categorySlugs: ["gift-wrapping-and-presentation-innovations", "seasonal-novelty-and-impulse-fun-packaging"],
+  },
+];
+
+const departmentForProduct = (categorySlug: string) =>
+  departmentShelves.find((department) => department.categorySlugs.includes(categorySlug)) ?? departmentShelves[0];
 
 export default function ProductsPage() {
   const structuredData = {
@@ -95,7 +145,7 @@ export default function ProductsPage() {
         <section className="relative overflow-hidden px-3 pb-8 pt-5 md:px-5">
           <div className="relative mx-auto min-h-[82vh] max-w-[1860px] overflow-hidden rounded-[2rem] bg-[#111111] text-[#f5f1eb] shadow-[0_24px_90px_rgba(17,17,17,0.18)]">
             <video
-              className="absolute inset-0 h-full w-full object-cover opacity-42"
+              className="absolute inset-0 h-full w-full object-cover opacity-[0.42]"
               src="/brand-assets/videos/circular-packaging-flow-uhd.mp4"
               autoPlay
               muted
@@ -103,7 +153,7 @@ export default function ProductsPage() {
               playsInline
               preload="metadata"
             />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,17,0.82),rgba(17,17,17,0.42)_48%,rgba(17,17,17,0.1)),radial-gradient(circle_at_76%_16%,rgba(45,156,255,0.34),transparent_26%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,17,0.84),rgba(17,17,17,0.48)_48%,rgba(17,17,17,0.12)),radial-gradient(circle_at_76%_16%,rgba(240,194,123,0.32),transparent_26%)]" />
             <div className="absolute inset-x-0 top-12 opacity-[0.12]">
               <div className="animate-marquee marquee-phrase whitespace-nowrap font-sans text-[15vw] font-medium uppercase leading-none">
                 shop the system  /  shop the system  /  shop the system  /
@@ -112,12 +162,12 @@ export default function ProductsPage() {
 
             <div className="relative z-10 grid min-h-[82vh] gap-12 px-6 py-12 md:px-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
               <div>
-                <p className="w-fit rounded-full border border-white/15 bg-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#b7d6fb] backdrop-blur">
-                  212 everyday packaging products
+                <p className="w-fit rounded-full border border-white/15 bg-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#f0c27b] backdrop-blur">
+                  {innovationProducts.length} everyday packaging products
                 </p>
                 <h1 className="mt-10 max-w-6xl font-sans text-[17vw] font-medium uppercase leading-[0.86] tracking-[-0.055em] md:text-[10vw] lg:text-[7vw]">
                   The shelf
-                  <span className="block text-[#b7d6fb]">for every</span>
+                  <span className="block text-[#f0c27b]">for every</span>
                   <span className="block">package.</span>
                 </h1>
                 <p className="mt-8 max-w-3xl border-t border-white/20 pt-6 text-lg leading-8 text-[#ddd4c8]">
@@ -146,7 +196,7 @@ export default function ProductsPage() {
                         preload="metadata"
                       />
                     </div>
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#b7d6fb]">{video.label}</p>
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#f0c27b]">{video.label}</p>
                     <h2 className="mt-2 font-display text-3xl font-semibold leading-[0.95] tracking-[-0.04em]">
                       {video.title}
                     </h2>
@@ -158,7 +208,7 @@ export default function ProductsPage() {
         </section>
 
         <section className="overflow-hidden border-y border-[#111111]/12 bg-[#f5f1eb] py-5">
-          <div className="animate-marquee marquee-phrase whitespace-nowrap font-sans text-[12vw] font-medium uppercase leading-none text-[#2d9cff] md:text-[7vw]">
+          <div className="animate-marquee marquee-phrase whitespace-nowrap font-sans text-[12vw] font-medium uppercase leading-none text-[#a56c45] md:text-[7vw]">
             seal  /  wrap  /  dry  /  label  /  ship  /  return  /  store  /  gift  /  seal  /  wrap  /  dry  /  label  /  ship  /  return  /  store  /  gift  /
           </div>
         </section>
@@ -171,20 +221,29 @@ export default function ProductsPage() {
                 Find the job first.
               </h2>
               <div className="mt-8 flex gap-2 overflow-x-auto pb-2 lg:grid lg:overflow-visible">
-                {featuredCategories.map((category, index) => (
+                {departmentShelves.map((department, index) => {
+                  const categories = department.categorySlugs
+                    .map((slug) => innovationCategories.find((category) => category.slug === slug))
+                    .filter(Boolean) as typeof innovationCategories;
+
+                  return (
                   <Link
-                    key={category.slug}
-                    href={`/packaging-categories/${category.slug}`}
+                    key={department.title}
+                    href={`/packaging-categories/${categories[0]?.slug ?? ""}`}
                     className="group min-w-72 rounded-[1.5rem] border border-[#111111]/10 bg-[#fffaf2] p-4 transition hover:bg-[#111111] hover:text-[#f5f1eb] lg:min-w-0"
                   >
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#2d72b8]">
-                      {String(index + 1).padStart(2, "0")} / {category.count} products
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a5f46]">
+                      {String(index + 1).padStart(2, "0")} / {categories.reduce((total, category) => total + category.count, 0)} products
                     </p>
                     <h3 className="mt-3 font-display text-2xl font-semibold leading-[0.95] tracking-[-0.035em]">
-                      {cleanCatalogText(category.aisle)}
+                      {department.title}
                     </h3>
+                    <p className="mt-3 text-xs font-semibold leading-5 text-[#5a554f] group-hover:text-[#ddd4c8]">
+                      {department.text}
+                    </p>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </aside>
 
@@ -205,6 +264,8 @@ export default function ProductsPage() {
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {shelfProducts.map((product, index) => {
                   const commerce = getCommerceProfile(product);
+                  const department = departmentForProduct(product.categorySlug);
+                  const useMotionCard = index < 30;
                   return (
                     <Link
                       key={product.slug}
@@ -212,15 +273,30 @@ export default function ProductsPage() {
                       className="group overflow-hidden rounded-[2rem] border border-[#111111]/10 bg-[#fffaf2] p-4 transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(17,17,17,0.1)]"
                     >
                       <div className="relative mb-5 h-56 overflow-hidden rounded-[1.45rem] bg-[#111111]">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(45,156,255,0.35),transparent_24%),linear-gradient(135deg,#111111,#242424)]" />
-                        <MiniArtifact index={index} />
+                        {useMotionCard ? (
+                          <video
+                            className="absolute inset-0 h-full w-full object-cover opacity-[0.82] transition duration-500 group-hover:scale-105"
+                            src={shelfVideos[index % shelfVideos.length]}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(240,194,123,0.36),transparent_25%),radial-gradient(circle_at_76%_70%,rgba(143,95,74,0.28),transparent_24%),linear-gradient(135deg,#111111,#2b2520)]" />
+                        )}
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,17,17,0.02),rgba(17,17,17,0.7))]" />
                         <span className="absolute left-4 top-4 rounded-full bg-[#f5f1eb] px-3 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.15em] text-[#111111]">
                           TRS-{String(product.catalogNumber).padStart(3, "0")}
+                        </span>
+                        <span className="absolute bottom-4 left-4 right-4 rounded-full bg-[#111111]/75 px-3 py-2 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#f5f1eb] backdrop-blur">
+                          {department.title}
                         </span>
                       </div>
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#2d72b8]">{cleanCatalogText(product.aisle)}</p>
+                          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a5f46]">{cleanCatalogText(product.aisle)}</p>
                           <h3 className="mt-3 font-display text-3xl font-semibold leading-[0.92] tracking-[-0.04em] text-[#111111]">
                             {cleanCatalogText(product.name)}
                           </h3>
@@ -266,71 +342,6 @@ export default function ProductsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-    </div>
-  );
-}
-
-function MiniArtifact({ index }: { index: number }) {
-  const variant = index % 6;
-
-  if (variant === 0) {
-    return (
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="relative h-28 w-44">
-          <span className="absolute left-2 top-5 h-24 w-24 rounded-full bg-[#2d9cff]" />
-          <span className="absolute left-11 top-14 h-10 w-10 rounded-full border-[10px] border-[#111111] bg-[#f5f1eb]" />
-          <span className="absolute right-0 top-12 h-12 w-28 rounded-[1rem] bg-[#f5f1eb]" />
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === 1) {
-    return (
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="h-32 w-44 rotate-[-6deg] rounded-[1.2rem] bg-[#e8ddd0] shadow-[inset_0_-14px_0_rgba(17,17,17,0.18)]" />
-      </div>
-    );
-  }
-
-  if (variant === 2) {
-    return (
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="grid h-28 w-44 grid-cols-5 gap-2">
-          {Array.from({ length: 15 }, (_, itemIndex) => (
-            <span key={itemIndex} className="rounded-full bg-[#c9ad82]" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === 3) {
-    return (
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="h-36 w-28 rounded-t-[2rem] rounded-b-[0.8rem] bg-[#b7d6fb] shadow-[inset_0_16px_0_rgba(17,17,17,0.18)]" />
-      </div>
-    );
-  }
-
-  if (variant === 4) {
-    return (
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="relative h-32 w-40">
-          <span className="absolute left-4 top-3 h-24 w-24 rounded-full bg-[#c77b5c]" />
-          <span className="absolute bottom-5 right-2 h-12 w-28 rounded-[1rem] bg-[#f5f1eb]" />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="absolute inset-0 grid place-items-center">
-      <div className="grid h-28 w-40 content-center gap-2 rounded-[1.2rem] bg-[#f5f1eb] p-5">
-        {Array.from({ length: 5 }, (_, itemIndex) => (
-          <span key={itemIndex} className="h-2 rounded-full bg-[#2d9cff]" />
-        ))}
-      </div>
     </div>
   );
 }

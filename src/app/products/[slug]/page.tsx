@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
-import { ProductArtifact } from "@/components/brand/ToresoMark";
 import {
   getInnovationProduct,
   getRelatedProducts,
@@ -17,12 +16,68 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const shapes = ["roller", "mailer", "tape", "pouch", "honeycomb", "label"] as const;
 const videoByTrack: Record<string, string> = {
   "Heat Sealing & Resealing Gadgets": "/brand-assets/videos/seamless-heat-seal-demo.mp4",
   "Mini Stretch Film & Wrapping Reinventions": "/brand-assets/videos/recyclable-packaging-table-hd.mp4",
-  "Cushioning & Shipping Protection (bubble/void-fill/foam reinvention)": "/brand-assets/videos/material-loop-720.mp4",
+  "Cushioning & Shipping Protection (bubble/void-fill/foam reinvention)": "/brand-assets/videos/paper-fiber-loop-hd.mp4",
+  "Freshness & Moisture Control (VCI / desiccant reinvention)": "/brand-assets/videos/earth-material-recovery-uhd.mp4",
+  "Reusable Silicone Solutions": "/brand-assets/videos/vertical-reuse-detail-hd.mp4",
+  "Travel Packing & Clothes Compression": "/brand-assets/videos/vertical-earth-care-uhd.mp4",
 };
+
+const productVideos = [
+  "/brand-assets/videos/recyclable-packaging-table-hd.mp4",
+  "/brand-assets/videos/paper-fiber-loop-hd.mp4",
+  "/brand-assets/videos/earth-material-recovery-uhd.mp4",
+  "/brand-assets/videos/nature-packaging-system-uhd.mp4",
+  "/brand-assets/videos/recycling-sort-loop-hd.mp4",
+  "/brand-assets/videos/vertical-material-closeup-hd.mp4",
+  "/brand-assets/videos/vertical-reuse-detail-hd.mp4",
+  "/brand-assets/videos/vertical-earth-care-uhd.mp4",
+  "/brand-assets/videos/circular-packaging-flow-uhd.mp4",
+];
+
+const productDepartments = [
+  {
+    title: "Kitchen Reseal Studio",
+    categorySlugs: [
+      "heat-sealing-and-resealing-gadgets",
+      "vacuum-sealing-and-food-compression",
+      "bag-clips-pour-spouts-and-resealable-closures",
+      "reusable-silicone-solutions",
+      "reusable-and-eco-wraps-beeswax-fabric",
+      "fridge-and-pantry-organization",
+      "portion-snack-and-lunch-packaging",
+      "bottle-liquid-and-beverage-sealing",
+      "specialty-sealing-and-preservation-advanced",
+    ],
+  },
+  {
+    title: "Ship, Wrap & Return",
+    categorySlugs: [
+      "cushioning-and-shipping-protection-bubble-void-fill-foam-reinvention",
+      "mini-stretch-film-and-wrapping-reinventions",
+      "label-sticker-and-identification-solutions",
+      "cable-cord-and-tech-small-item-containment",
+    ],
+  },
+  {
+    title: "Freshness & Care Lab",
+    categorySlugs: [
+      "freshness-and-moisture-control-vci-desiccant-reinvention",
+      "jewelry-silver-and-small-valuables-protection-vci-anti-tarnish-reinvention",
+      "home-closet-and-bathroom-storage-extensions",
+    ],
+  },
+  {
+    title: "Travel & Outdoor Pack Bar",
+    categorySlugs: ["travel-packing-and-clothes-compression", "outdoor-picnic-and-on-the-go-packaging"],
+  },
+  {
+    title: "Gift, Festival & Fun Desk",
+    categorySlugs: ["gift-wrapping-and-presentation-innovations", "seasonal-novelty-and-impulse-fun-packaging"],
+  },
+];
 
 export async function generateStaticParams() {
   return innovationProducts.map((product) => ({ slug: product.slug }));
@@ -70,8 +125,16 @@ export default async function ProductPage({ params }: PageProps) {
   const index = innovationProducts.findIndex((item) => item.slug === product.slug);
   const commerce = getCommerceProfile(product);
   const relatedProducts = getRelatedProducts(product, 6);
-  const shape = shapes[Math.max(0, index) % shapes.length];
-  const demoVideo = videoByTrack[product.track] ?? "/brand-assets/videos/material-loop-720.mp4";
+  const safeIndex = Math.max(0, index);
+  const demoVideo = videoByTrack[product.track] ?? productVideos[safeIndex % productVideos.length];
+  const supportingVideos = [
+    productVideos[(safeIndex + 2) % productVideos.length],
+    productVideos[(safeIndex + 5) % productVideos.length],
+    productVideos[(safeIndex + 7) % productVideos.length],
+  ];
+  const departmentName =
+    productDepartments.find((department) => department.categorySlugs.includes(product.categorySlug))?.title ??
+    "Toreso Daily Packaging";
   const productName = cleanCatalogText(product.name);
   const productAisle = cleanCatalogText(product.aisle);
   const productInnovation = cleanCatalogText(product.b2cInnovation);
@@ -211,7 +274,7 @@ export default async function ProductPage({ params }: PageProps) {
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,17,17,0.08),rgba(17,17,17,0.68))]" />
                     <div className="absolute bottom-5 left-5 right-5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b7d6fb]">Demo motion</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f0c27b]">Demo motion</p>
                       <h2 className="mt-3 max-w-2xl font-display text-5xl font-semibold leading-[0.96] tracking-[-0.035em]">
                         See the packaging behavior before buying.
                       </h2>
@@ -219,27 +282,32 @@ export default async function ProductPage({ params }: PageProps) {
                   </div>
                 </div>
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  <ProductArtifact
-                    variant={shape}
-                    title={productName}
-                    material={productFormat}
-                    accent={index % 3 === 0 ? "vapor" : index % 3 === 1 ? "fiber" : "amber"}
-                  />
-                  <article className="rounded-[1.5rem] border border-[#111111]/10 bg-[#fffaf2] p-5 sm:col-span-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2d72b8]">Product media</p>
-                    <h2 className="mt-4 font-display text-4xl font-semibold leading-[0.96] tracking-[-0.035em]">
-                      Gallery-ready layout for real product cutouts.
-                    </h2>
-                    <p className="mt-4 text-sm leading-7 text-[#5a554f]">
-                      This slot is ready for final product renders, in-hand scale shots, close-up
-                      mechanism shots, and packaging instruction clips as soon as assets are generated.
-                    </p>
-                  </article>
+                  {[
+                    ["Mechanism", "How the product closes, cushions, dries, wraps, or stores."],
+                    ["Material loop", "What the shopper should reuse, refill, separate, or recycle."],
+                    ["Daily scale", "Why this is consumer-sized instead of industrial bulk."],
+                  ].map(([label, text], mediaIndex) => (
+                    <article key={label} className="overflow-hidden rounded-[1.5rem] border border-[#111111]/10 bg-[#fffaf2]">
+                      <video
+                        className="h-44 w-full object-cover"
+                        src={supportingVideos[mediaIndex]}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                      />
+                      <div className="p-5">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5f46]">{label}</p>
+                        <p className="mt-3 text-sm font-bold leading-6 text-[#5a554f]">{text}</p>
+                      </div>
+                    </article>
+                  ))}
                 </div>
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   {lifecycle.map((item) => (
                     <article key={item.label} className="rounded-[1.3rem] border border-[#111111]/10 bg-[#fffaf2] p-5">
-                      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2d72b8]">{item.label}</h2>
+                      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5f46]">{item.label}</h2>
                       <p className="mt-3 text-sm font-bold leading-6 text-[#5f5a54]">{item.value}</p>
                     </article>
                   ))}
@@ -247,7 +315,10 @@ export default async function ProductPage({ params }: PageProps) {
               </div>
 
               <div className="rounded-[2rem] border border-[#111111]/10 bg-[#fffaf2] p-6 shadow-[0_24px_70px_rgba(17,17,17,0.08)]">
-                <p className="w-fit rounded-full bg-[#111111] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#f5f1eb]">{cleanCatalogText(product.launchPriority)}</p>
+                <div className="flex flex-wrap gap-2">
+                  <p className="w-fit rounded-full bg-[#111111] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#f5f1eb]">{cleanCatalogText(product.launchPriority)}</p>
+                  <p className="w-fit rounded-full bg-[#f0c27b] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]">{departmentName}</p>
+                </div>
                 <h1 className="mt-6 font-sans text-5xl font-medium uppercase leading-[0.96] tracking-[-0.045em] sm:text-6xl">
                   {productName}
                 </h1>
@@ -263,7 +334,7 @@ export default async function ProductPage({ params }: PageProps) {
                 </div>
 
                 <div className="mt-7 rounded-[1.5rem] border border-[#111111]/10 bg-[#f5f1eb] p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2d72b8]">Toreso launch price</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5f46]">Toreso launch price</p>
                   <div className="mt-3 flex flex-wrap items-end gap-3">
                     <p className="font-sans text-5xl font-medium tracking-[-0.07em]">{formatPrice(commerce.price)}</p>
                     <p className="pb-2 text-base font-semibold text-[#6d5c35] line-through">{formatPrice(commerce.mrp)}</p>
@@ -283,7 +354,7 @@ export default async function ProductPage({ params }: PageProps) {
                 </div>
 
                 <div className="mt-6 rounded-[1.5rem] border border-[#111111]/10 bg-[#f5f1eb] p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2d72b8]">Choose your pack</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5f46]">Choose your pack</p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     {commerce.packOptions.map((option, optionIndex) => (
                       <span
@@ -348,7 +419,7 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="container mx-auto px-6">
             <div className="mb-10 grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2d72b8]">Use cycle</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5f46]">Use cycle</p>
                 <h2 className="mt-5 font-display text-4xl font-semibold leading-[0.98] tracking-[-0.035em]">
                   How {productName} earns its place at home.
                 </h2>
@@ -361,7 +432,7 @@ export default async function ProductPage({ params }: PageProps) {
             <div className="grid gap-4 md:grid-cols-4">
               {useSteps.map((step, stepIndex) => (
                 <article key={step.label} className="rounded-[1.5rem] border border-[#111111]/10 bg-[#fffaf2] p-5">
-                  <p className="font-sans text-5xl font-medium leading-none tracking-[-0.045em] text-[#2d9cff]">
+                  <p className="font-sans text-5xl font-medium leading-none tracking-[-0.045em] text-[#a56c45]">
                     {String(stepIndex + 1).padStart(2, "0")}
                   </p>
                   <h3 className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-[#111111]">{step.label}</h3>
@@ -434,15 +505,28 @@ export default async function ProductPage({ params }: PageProps) {
               </Link>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              {relatedProducts.map((item) => (
+              {relatedProducts.map((item, relatedIndex) => (
                 <Link
                   key={item.slug}
                   href={`/products/${item.slug}`}
-                  className="rounded-[1.5rem] border border-[#242424]/12 bg-[#f3eee6] p-5 loop-outline transition hover:-translate-y-1"
+                  className="group overflow-hidden rounded-[1.5rem] border border-[#242424]/12 bg-[#f3eee6] loop-outline transition hover:-translate-y-1"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6d5c35]">{productJobLabel(item.format)}</p>
-                  <h3 className="mt-4 font-display text-3xl font-semibold leading-[0.98] tracking-[-0.03em]">{cleanCatalogText(item.name)}</h3>
-                  <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#5f5a54]">{compactCatalogText(item.b2cInnovation, 140)}</p>
+                  <div className="h-40 overflow-hidden bg-[#111111]">
+                    <video
+                      className="h-full w-full object-cover opacity-[0.82] transition group-hover:scale-105"
+                      src={productVideos[(safeIndex + relatedIndex + 3) % productVideos.length]}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6d5c35]">{productJobLabel(item.format)}</p>
+                    <h3 className="mt-4 font-display text-3xl font-semibold leading-[0.98] tracking-[-0.03em]">{cleanCatalogText(item.name)}</h3>
+                    <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#5f5a54]">{compactCatalogText(item.b2cInnovation, 140)}</p>
+                  </div>
                 </Link>
               ))}
             </div>
